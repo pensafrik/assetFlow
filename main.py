@@ -185,5 +185,5 @@ def open_browser():
 
 
 if __name__ == '__main__':
-    threading.Timer(2.0, open_browser).start()
+    threading.Timer(1.0, open_browser).start()
     app.run(host='0.0.0.0', port=5000)
