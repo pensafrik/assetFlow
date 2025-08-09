@@ -1,4 +1,4 @@
-('C:\\Users\\hamoh\\OneDrive\\Documentos\\client_management_app Kliient V1.4 '
+('C:\\Users\\hamoh\\OneDrive\\Documentos\\client_management_app Kliient V1.6 '
  'PY\\build\\main\\PYZ-00.pyz',
  [('__future__',
    'C:\\Users\\hamoh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\__future__.py',
