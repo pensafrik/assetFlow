@@ -84,8 +84,7 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-@app.before_request
-def create_default_user_and_db():
+with app.app_context():
     db.create_all()
     if not User.query.filter_by(username='Amine').first():
         admin = User(username='Amine')
