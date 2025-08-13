@@ -12,7 +12,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 
 
-# Determine base path for templates and static folders
+
 if getattr(sys, 'frozen', False):
     base_path = sys._MEIPASS
 else:
@@ -26,7 +26,7 @@ app = Flask(
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
 
-# Persistent DB path logic
+
 if getattr(sys, 'frozen', False):
     base_dir = os.path.dirname(sys.executable)
 else:
@@ -47,7 +47,7 @@ csrf = CSRFProtect(app)
 app.jinja_env.globals['csrf_token'] = generate_csrf
 
 
-# Models
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
@@ -88,12 +88,12 @@ with app.app_context():
     db.create_all()
     if not User.query.filter_by(username='Amine').first():
         admin = User(username='Amine')
-        admin.set_password('12345')  # default - change in production
+        admin.set_password('12345')  
         db.session.add(admin)
         db.session.commit()
 
 
-# Routes
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -180,7 +180,7 @@ def shutdown_server():
 
 
 def open_browser():
-    time.sleep(2)  # Wait for server to start
+    time.sleep(2)  
     webbrowser.open("http://127.0.0.1:5000")
 
 

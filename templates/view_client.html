@@ -5,18 +5,18 @@
 {% block styles %}
 <style>
     .form-label {
-        font-size: 1.2rem;  /* bigger text */
-        font-weight: 600;   /* bold */
-        color: #333;        /* darker color */
+        font-size: 1.2rem;  
+        font-weight: 600;   
+        color: #333;        
     }
     .password-container {
     display: inline-flex;
     align-items: center;
-    gap: 5px; /* space between input and icon */
+    gap: 5px; 
 }
 
 .password-container .form-control-plaintext {
-    width: 120px; /* smaller width so button stays close */
+    width: 120px; 
     padding: 4px 6px;
     font-size: 0.9rem;
 }
@@ -137,7 +137,7 @@
     </div>
 
 </div>
-<!-- Notification Toast -->
+
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
     <div id="copyToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="d-flex">
@@ -166,11 +166,11 @@ function togglePassword(id, btn) {
     }
 }
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Bootstrap Toast
+    
     const toastEl = document.getElementById('copyToast');
     const toast = bootstrap.Toast ? new bootstrap.Toast(toastEl) : null;
 
-    // Copy to clipboard on click
+    
     document.querySelectorAll('.copy-field').forEach(field => {
         field.style.cursor = 'pointer';
         field.addEventListener('click', function() {

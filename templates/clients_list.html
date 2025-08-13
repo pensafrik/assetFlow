@@ -78,21 +78,21 @@
                             </td>
      <td>
     <div class="action-buttons">
-        <!-- View Button -->
+        
         <a href="{{ url_for('view_client', id=client.id) }}" 
            class="btn btn-sm btn-outline-info btn-action" 
            title="View Client">
             <i class="fas fa-eye fa-fw"></i>
         </a>
         
-        <!-- Edit Button -->
+        
         <a href="{{ url_for('edit_client', id=client.id) }}" 
            class="btn btn-sm btn-outline-primary btn-action" 
            title="Edit Client">
             <i class="fas fa-edit fa-fw"></i>
         </a>
         
-        <!-- Delete Button -->
+        
         <form action="{{ url_for('delete_client', id=client.id) }}" 
               method="post" 
               class="d-inline"
@@ -125,7 +125,7 @@
     </div>
 </div>
 
-<!-- Notification Toast -->
+
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
     <div id="copyToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="d-flex">
@@ -142,11 +142,11 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Bootstrap Toast
+    
     const toastEl = document.getElementById('copyToast');
     const toast = bootstrap.Toast ? new bootstrap.Toast(toastEl) : null;
     
-    // Password visibility toggle
+    
     document.querySelectorAll('.toggle-pwd').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Copy password on click
+    
     document.querySelectorAll('.password-field').forEach(field => {
         field.addEventListener('click', function() {
             this.select();
@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Force pointer cursor on all interactive elements
+    
     document.querySelectorAll('a, button, input[type="password"], .btn-action').forEach(el => {
         el.style.cursor = 'pointer';
     });
