@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit Zone' if zone else 'Add Zone' }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ 'Edit Zone' if zone else 'Add Zone' }}</h2>
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-3">
+            <label for="nom" class="form-label">Nom</label>
+            <input type="text" class="form-control" id="nom" name="nom" value="{{ zone.nom if zone else '' }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="pays" class="form-label">Pays</label>
+            <input type="text" class="form-control" id="pays" name="pays" value="{{ zone.pays if zone else '' }}" required>
+        </div>
+        <button type="submit" class="btn btn-success">Save</button>
+        <a href="{{ url_for('zones_list') }}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

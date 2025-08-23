@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Familles{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='clients.css') }}">
+<style>
+.mui-table th, .mui-table td {
+    vertical-align: middle;
+    text-align: center;
+}
+.mui-table th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-header d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4">Familles</h2>
+        <div>
+      <a href="{{ url_for('famille_add') }}" class="btn btn-primary me-2">
+        <i class="fas fa-plus-circle me-1"></i> Ajouter
+      </a>
+        <button id="bulkDeleteBtn" class="btn btn-danger" disabled>
+       <i class="fas fa-trash me-1"></i> Supprimer
+      </button>
+      
+    </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <form id="familleForm" method="POST" action="">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="table-responsive">
+                    <table class="table table-hover mui-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input class="form-check-input" type="checkbox" id="selectAll">
+                                    </div>
+                                </th>
+                                <th>Nom</th>
+                                <th>Code</th>
+                                <th>Type</th>
+                                <th>Departement</th>
+                                <th>Description</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for f in familles %}
+                            <tr>
+                                <td>
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input class="form-check-input row-checkbox" type="checkbox" name="famille_ids" value="{{ f.id }}">
+                                    </div>
+                                </td>
+                                <td>{{ f.nom }}</td>
+                                <td>{{ f.code }}</td>
+                                <td>{{ f.type }}</td>
+                                <td>{{ f.departement }}</td>
+                                <td>{{ f.description }}</td>
+                                <td>
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <button type="button" class="btn btn-sm btn-outline-info view-famille-btn"
+              data-bs-toggle="modal" data-bs-target="#viewFamilleModal"
+              data-nom="{{ f.nom }}"
+              data-code="{{ f.code }}"
+              data-type="{{ f.type }}"
+              data-departement="{{ f.departement }}"
+              data-description="{{ f.description }}">
+        <i class="fas fa-eye"></i>
+      </button>
+                                        <a href="{{ url_for('famille_edit', id=f.id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        
+                                    </div>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center p-4">
+                                    <i class="fas fa-folder-open fa-2x text-muted"></i>
+                                    <h5 class="mt-2">No Familles Found</h5>
+                                    <p>Click "Add Famille" to create one</p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- View Famille Modal -->
+<div class="modal fade" id="viewFamilleModal" tabindex="-1" aria-labelledby="viewFamilleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewFamilleModalLabel">View Famille</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="list-group">
+          <li class="list-group-item"><strong>Nom:</strong> <span id="modalNom"></span></li>
+          <li class="list-group-item"><strong>Code:</strong> <span id="modalCode"></span></li>
+          <li class="list-group-item"><strong>Type:</strong> <span id="modalType"></span></li>
+          <li class="list-group-item"><strong>Departement:</strong> <span id="modalDepartement"></span></li>
+          <li class="list-group-item"><strong>Description:</strong> <span id="modalDescription"></span></li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const selectAll = document.getElementById("selectAll");
+    const rowCheckboxes = document.querySelectorAll(".row-checkbox");
+    const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
+    const form = document.getElementById("familleForm");
+
+    function updateSelectAll() {
+        const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+        const anyChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+        selectAll.checked = allChecked;
+        bulkDeleteBtn.disabled = !anyChecked;
+    }
+
+    selectAll.addEventListener("change", () => {
+        rowCheckboxes.forEach(cb => cb.checked = selectAll.checked);
+        bulkDeleteBtn.disabled = !selectAll.checked;
+    });
+
+    rowCheckboxes.forEach(cb => cb.addEventListener("change", updateSelectAll));
+
+    bulkDeleteBtn.addEventListener("click", () => {
+        if(confirm("Are you sure you want to delete selected familles?")) {
+            form.action = "{{ url_for('famille_bulk_delete') }}";  // Flask route for bulk delete
+            form.submit();
+        }
+    });
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const modal = document.getElementById('viewFamilleModal');
+
+  modal.addEventListener('show.bs.modal', function (event) {
+    const button = event.relatedTarget;
+    const nom = button.getAttribute('data-nom');
+    const code = button.getAttribute('data-code');
+    const type = button.getAttribute('data-type');
+    const departement = button.getAttribute('data-departement');
+    const description = button.getAttribute('data-description');
+
+    modal.querySelector('#modalNom').textContent = nom;
+    modal.querySelector('#modalCode').textContent = code;
+    modal.querySelector('#modalType').textContent = type;
+    modal.querySelector('#modalDepartement').textContent = departement;
+    modal.querySelector('#modalDescription').textContent = description;
+  });
+});
+</script>
+{% endblock %}

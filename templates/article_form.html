@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ "Edit Article" if article else "Add New Article" }}
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='clients.css') }}">
+<style>
+    .form-label { font-weight: 500; }
+    .article-img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-header mb-3">
+        <h2 class="h4">{{ "Edit Article" if article else "Add New Article" }}</h2>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="row g-3">
+
+                    <!-- Matricule -->
+                    <div class="col-md-4">
+                        <label class="form-label">Matricule</label>
+                        <input type="text" name="matricule" class="form-control" value="{{ article.matricule if article else '' }}" required>
+                    </div>
+
+                    <!-- Zone -->
+                    <div class="col-md-4">
+                        <label class="form-label">Zone</label>
+                        <select name="zone" class="form-select" required>
+                            <option value="">Select Zone</option>
+                            {% for z in zones %}
+                                <option value="{{ z.id }}" {% if article and article.zone_id == z.id %}selected{% endif %}>{{ z.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Site -->
+                    <div class="col-md-4">
+                        <label class="form-label">Site</label>
+                        <select name="site" class="form-select" required>
+                            <option value="">Select Site</option>
+                            {% for s in sites %}
+                                <option value="{{ s.id }}" {% if article and article.site_id == s.id %}selected{% endif %}>{{ s.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Local -->
+                    <div class="col-md-4">
+                        <label class="form-label">Local</label>
+                        <select name="local" class="form-select">
+                            <option value="">Select Local</option>
+                            {% for l in locaux %}
+                                <option value="{{ l.id }}" {% if article and article.local_id == l.id %}selected{% endif %}>{{ l.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Affecté à -->
+<div class="col-md-4">
+    <label class="form-label">Affecté à</label>
+    <select name="affecte_a" class="form-select" required>
+        <option value="">Select Salarié</option>
+        {% for salarie in salaries %}
+            <option value="{{ salarie.nom_prenom }}" {% if article and article.affecte_a == salarie.nom_prenom %}selected{% endif %}>
+                {{ salarie.nom_prenom }}
+            </option>
+        {% endfor %}
+    </select>
+</div>
+
+                    <!-- Zone d'affectation 
+                    <div class="col-md-4">
+                        <label class="form-label">Zone d'affectation</label>
+                        <input type="text" name="zone_affectation" class="form-control" value="{{ article.zone_affectation if article else '' }}">
+                    </div>
+                -->
+
+                    <!-- Code QR -->
+                    <div class="col-md-4">
+                        <label class="form-label">Code QR/Bar</label>
+                        <input type="text" name="qr_code" class="form-control" value="{{ article.qr_code if article else '' }}">
+                    </div>
+
+                    <!-- Famille -->
+                    <div class="col-md-4">
+                        <label class="form-label">Famille</label>
+                        <select name="famille" class="form-select" id="familleSelect" required>
+                            <option value="">Select Famille</option>
+                            {% for f in familles %}
+                                <option value="{{ f.id }}" {% if article and article.famille_id == f.id %}selected{% endif %}>
+                                    {{ f.nom }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Sous-Famille -->
+                    <div class="col-md-4">
+                        <label class="form-label">Sous-Famille</label>
+                        <select name="sous_famille" class="form-select" id="sousFamilleSelect" required>
+                            <option value="">Select Sous-Famille</option>
+                        </select>
+                    </div>
+
+                    <!-- Désignation -->
+                    <div class="col-md-4">
+                        <label class="form-label">Désignation</label>
+                        <input type="text" name="designation" class="form-control" value="{{ article.designation if article else '' }}">
+                    </div>
+
+                    <!-- N° de série -->
+                    <div class="col-md-4">
+                        <label class="form-label">N° de série</label>
+                        <input type="text" name="serial_number" class="form-control" value="{{ article.serial_number if article else '' }}">
+                    </div>
+
+                    <!-- Marque -->
+<div class="col-md-4">
+    <label class="form-label">Marque</label>
+    <input type="text" name="marque" class="form-control" value="{{ article.marque if article else '' }}">
+</div>
+
+<!-- Modèle -->
+<div class="col-md-4">
+    <label class="form-label">Modèle</label>
+    <input type="text" name="modele" class="form-control" value="{{ article.modele if article else '' }}">
+</div>
+
+<!-- Statut -->
+<div class="col-md-4 mb-3">
+    <label class="form-label">Statut</label>
+    <select name="statut" id="statutSelect" class="form-select" required>
+        <option value="">Select Statut</option>
+        <option value="En cours d'utilisation" {% if article and article.statut == "En cours d'utilisation" %}selected{% endif %}>En cours d'utilisation</option>
+        <option value="EN Panne" {% if article and article.statut == 'EN Panne' %}selected{% endif %}>En panne</option>     
+        <option value="En maintenance" {% if article and article.statut == 'En maintenance' %}selected{% endif %}>En reparation</option>
+        <option value="Hors Services" {% if article and article.statut == 'Hors Services' %}selected{% endif %}>Hors services</option>
+    </select>
+</div>
+
+                    <!-- Image 
+                    <div class="col-md-4">
+                        <label class="form-label">Image</label>
+                        <input type="file" name="image" class="form-control">
+                        {% if article and article.image %}
+                            <img src="{{ url_for('static', filename='uploads/' ~ article.image) }}" alt="Article" class="article-img mt-2">
+                        {% endif %}
+                    </div>
+                </div>
+                -->
+
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-success">
+                        {{ "Update Article" if article else "Add Article" }}
+                    </button>
+                    <a href="{{ url_for('articles_list') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- JS to filter sous-familles -->
+<script type="text/javascript">
+    document.addEventListener("DOMContentLoaded", function () {
+        const sousFamilles = {{ sous_familles | tojson | safe }};
+        const selectedSousFamilleId = {{ article.sous_famille_id if article else 'null' }};
+        const familleSelect = document.getElementById("familleSelect");
+        const sousFamilleSelect = document.getElementById("sousFamilleSelect");
+
+        function updateSousFamilleOptions() {
+            const selectedFamilleId = parseInt(familleSelect.value) || null;
+            sousFamilleSelect.innerHTML = '<option value="">Select Sous-Famille</option>';
+
+            sousFamilles.forEach(sf => {
+                if (sf.famille_id === selectedFamilleId) {
+                    const option = document.createElement("option");
+                    option.value = sf.id;
+                    option.textContent = sf.nom;
+                    if (sf.id === selectedSousFamilleId) {
+                        option.selected = true;
+                    }
+                    sousFamilleSelect.appendChild(option);
+                }
+            });
+        }
+
+        familleSelect.addEventListener("change", updateSousFamilleOptions);
+        updateSousFamilleOptions();
+    });
+</script>
+{% endblock %}

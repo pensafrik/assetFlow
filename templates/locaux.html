@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}Locaux{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4">Locaux</h2>
+        <div>
+      <a href="{{ url_for('locaux_add') }}" class="btn btn-primary me-2">
+        <i class="fas fa-plus-circle me-1"></i> Ajouter
+      </a>
+        <button id="bulkDeleteBtn" class="btn btn-danger" disabled>
+       <i class="fas fa-trash me-1"></i> Supprimer
+      </button>
+      
+    </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <form id="locauxForm" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="selectAll"></th>
+                                <th>Zone</th>
+                                <th>Site</th>
+                                <th>Bâtiment</th>
+                                <th>Etage</th>
+                                <th>Nom</th>
+                                <th>Code</th>
+                                <!--<th>Tag RFID</th>-->
+                                <th>Commentaires</th>
+                                <th>Dernier inventaire</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for l in locaux_list %}
+                            <tr>
+                                <td><input type="checkbox" class="row-checkbox" name="locaux_ids" value="{{ l.id }}"></td>
+                                <td>{{ l.zone.nom }}</td>
+                                <td>{{ l.site.nom }}</td>
+                                <td>{{ l.batiment }}</td>
+                                <td>{{ l.etage }}</td>
+                                <td>{{ l.nom }}</td>
+                                <td>{{ l.code }}</td>
+                                <!--<td>{{ l.tag_rfid }}</td>-->
+                                <td>{{ l.commentaires }}</td>
+                                <td>{{ l.dernier_inventaire if l.dernier_inventaire else '-' }}</td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <button type="button" class="btn btn-sm btn-outline-info"
+                                            data-bs-toggle="modal" data-bs-target="#viewLocauxModal"
+                                            data-zone="{{ l.zone.nom }}"
+                                            data-site="{{ l.site.nom }}"
+                                            data-batiment="{{ l.batiment }}"
+                                            data-etage="{{ l.etage }}"
+                                            data-nom="{{ l.nom }}"
+                                            data-code="{{ l.code }}"
+                                            
+                                            data-commentaires="{{ l.commentaires }}"
+                                            data-dernier="{{ l.dernier_inventaire if l.dernier_inventaire else '-' }}"
+                                            title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <a href="{{ url_for('locaux_add', id=l.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="11" class="text-center p-4">No Locaux Found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="viewLocauxModal" tabindex="-1" aria-labelledby="viewLocauxModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewLocauxModalLabel">Locaux Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Zone:</strong> <span id="modalZone"></span></p>
+        <p><strong>Site:</strong> <span id="modalSite"></span></p>
+        <p><strong>Bâtiment:</strong> <span id="modalBatiment"></span></p>
+        <p><strong>Etage:</strong> <span id="modalEtage"></span></p>
+        <p><strong>Nom:</strong> <span id="modalNom"></span></p>
+        <p><strong>Code:</strong> <span id="modalCode"></span></p>
+        <!--<p><strong>Tag RFID:</strong> <span id="modalTag"></span></p>-->
+        <p><strong>Commentaires:</strong> <span id="modalCommentaires"></span></p>
+        <p><strong>Dernier inventaire:</strong> <span id="modalDernier"></span></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const selectAll = document.getElementById("selectAll");
+    const rowCheckboxes = document.querySelectorAll(".row-checkbox");
+    const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
+    const form = document.getElementById("locauxForm");
+
+    selectAll.addEventListener("change", () => {
+        rowCheckboxes.forEach(cb => cb.checked = selectAll.checked);
+        bulkDeleteBtn.disabled = !selectAll.checked;
+    });
+
+    rowCheckboxes.forEach(cb => cb.addEventListener("change", () => {
+        const anyChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+        bulkDeleteBtn.disabled = !anyChecked;
+    }));
+
+    bulkDeleteBtn.addEventListener("click", () => {
+        if(confirm("Delete selected locaux?")) form.submit();
+    });
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const selectAll = document.getElementById("selectAll");
+    const rowCheckboxes = document.querySelectorAll(".row-checkbox");
+    const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
+    const form = document.getElementById("locauxForm");
+
+    selectAll.addEventListener("change", () => {
+        rowCheckboxes.forEach(cb => cb.checked = selectAll.checked);
+        bulkDeleteBtn.disabled = !selectAll.checked;
+    });
+
+    rowCheckboxes.forEach(cb => cb.addEventListener("change", () => {
+        const anyChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+        bulkDeleteBtn.disabled = !anyChecked;
+    }));
+
+    bulkDeleteBtn.addEventListener("click", () => {
+        if(confirm("Delete selected locaux?")) form.submit();
+    });
+
+    // Eye icon modal
+    var viewLocauxModal = document.getElementById('viewLocauxModal');
+    viewLocauxModal.addEventListener('show.bs.modal', function (event) {
+      var button = event.relatedTarget;
+      document.getElementById('modalZone').textContent = button.getAttribute('data-zone');
+      document.getElementById('modalSite').textContent = button.getAttribute('data-site');
+      document.getElementById('modalBatiment').textContent = button.getAttribute('data-batiment');
+      document.getElementById('modalEtage').textContent = button.getAttribute('data-etage');
+      document.getElementById('modalNom').textContent = button.getAttribute('data-nom');
+      document.getElementById('modalCode').textContent = button.getAttribute('data-code');
+      document.getElementById('modalTag').textContent = button.getAttribute('data-tag');
+      document.getElementById('modalCommentaires').textContent = button.getAttribute('data-commentaires');
+      document.getElementById('modalDernier').textContent = button.getAttribute('data-dernier');
+    });
+});
+</script>
+{% endblock %}

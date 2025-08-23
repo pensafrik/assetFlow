@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}Articles{% endblock %}
+
+{% block styles %}
+<style>
+  .mui-table th, .mui-table td { vertical-align: middle; text-align: center; }
+  .mui-table th { background-color: #f5f5f5; font-weight: 600; }
+  .asset-img { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 mb-0">Articles</h2>
+    <div>
+      <a href="{{ url_for('article_add_edit') }}" class="btn btn-primary me-2">
+        <i class="fas fa-plus-circle me-1"></i> Ajouter
+      </a>
+        <button id="bulkDeleteBtn" class="btn btn-danger" disabled>
+       <i class="fas fa-trash me-1"></i> Supprimer
+      </button>
+      
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0"><i class="fas fa-boxes me-2"></i>Articles Directory</h5>
+    </div>
+    <div class="card-body p-0">
+
+      <!-- BULK DELETE FORM (action points to bulk delete route) -->
+      <form id="articlesForm" method="POST" action="{{ url_for('bulk_delete_articles') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-3">
+  <input type="text" id="articleSearch" class="form-control" placeholder="Search Articles...">
+</div>
+        <div class="table-responsive">
+          <table class="table table-hover mui-table mb-0">
+            <thead>
+              <tr>
+                <th>
+                  <div class="form-check d-flex justify-content-center">
+                    <input class="form-check-input" type="checkbox" id="selectAll">
+                  </div>
+                </th>
+                <!--<th>Image</th>-->
+                <th>Matricule</th>
+                <th>Zone</th>
+                <th>Site</th>
+                <th>Local</th>
+                <th>Affecté à</th>
+                <!--<th>Zone d'affectation</th>-->
+                <th>QR/Bar</th>
+                <th>Famille</th>
+                <th>Désignation</th>
+                <th>N° de série</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for article in articles %}
+              <tr>
+                <!-- BULK CHECKBOX -->
+                <td>
+                  <div class="form-check d-flex justify-content-center">
+                    <input class="form-check-input row-checkbox" type="checkbox" name="article_ids" value="{{ article.id }}">
+                  </div>
+                </td>
+
+                <!-- INFO -->
+                <!--<td>
+                  {% if article.image %}
+                    <img src="{{ url_for('static', filename='uploads/' ~ article.image) }}" class="asset-img" alt="Article">
+                  {% else %}
+                    <i class="fas fa-box fa-lg text-muted"></i>
+                  {% endif %}
+                </td>-->
+                <td>{{ article.matricule }}</td>
+                <td>{{ article.zone.nom if article.zone else '' }}</td>
+                <td>{{ article.site.nom if article.site else '' }}</td>
+                <td>{{ article.local.nom if article.local else '' }}</td>
+                <td>{{ article.affecte_a }}</td>
+                <!--<td>{{ article.zone_affectation }}</td>-->
+                <td>{{ article.qr_code }}</td>
+                <td>{{ article.famille.nom if article.famille else '' }}</td>
+                <td>{{ article.designation }}</td>
+                <td>{{ article.serial_number }}</td>
+
+                <!-- ACTIONS -->
+                <td>
+                  <div class="d-flex gap-1 justify-content-center">
+                    <!-- VIEW ICON -->
+<button type="button" class="btn btn-sm btn-outline-info view-article-btn"
+        data-bs-toggle="modal" data-bs-target="#viewArticleModal"
+        
+        data-matricule="{{ article.matricule }}"
+        data-zone="{{ article.zone.nom if article.zone else '' }}"
+        data-site="{{ article.site.nom if article.site else '' }}"
+        data-local="{{ article.local.nom if article.local else '' }}"
+        data-affecte="{{ article.affecte_a }}"
+        
+        data-qr="{{ article.qr_code }}"
+        data-famille="{{ article.famille.nom if article.famille else '' }}"
+        data-designation="{{ article.designation }}"
+        data-serial="{{ article.serial_number }}"
+        data-marque="{{ article.marque}}"
+        data-modele="{{ article.modele }}"
+        data-statut="{{ article.statut }}"
+        title="View">
+    <i class="fas fa-eye"></i>
+</button>
+                    <a href="{{ url_for('article_add_edit', id=article.id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                      <i class="fas fa-edit"></i>
+                    </a>
+
+                    
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="13" class="text-center p-4">
+                  <i class="fas fa-box-open fa-2x text-muted"></i>
+                  <h5 class="mt-2">No Articles Found</h5>
+                  <p>Click "Add New Article" to create one</p>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+<!-- View Article Modal -->
+<div class="modal fade" id="viewArticleModal" tabindex="-1" aria-labelledby="viewArticleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewArticleModalLabel">View Article</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body row g-3">
+        <!--<div class="col-md-4 text-center">
+          <img id="modalImage" src="" class="img-fluid rounded mb-3" alt="Article Image">
+        </div>-->
+        <div class="col-md-8">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item"><strong>Matricule:</strong> <span id="modalMatricule"></span></li>
+            <li class="list-group-item"><strong>Zone:</strong> <span id="modalZone"></span></li>
+            <li class="list-group-item"><strong>Site:</strong> <span id="modalSite"></span></li>
+            <li class="list-group-item"><strong>Local:</strong> <span id="modalLocal"></span></li>
+            <li class="list-group-item"><strong>Affecté à:</strong> <span id="modalAffecte"></span></li>
+            <!--<li class="list-group-item"><strong>Zone d'affectation:</strong> <span id="modalZoneAffect"></span></li>-->
+            <li class="list-group-item"><strong>QR/Bar:</strong> <span id="modalQR"></span></li>
+            <li class="list-group-item"><strong>Famille:</strong> <span id="modalFamille"></span></li>
+            <li class="list-group-item"><strong>Désignation:</strong> <span id="modalDesignation"></span></li>
+            <li class="list-group-item"><strong>N° de série:</strong> <span id="modalSerial"></span></li>
+            <li class="list-group-item"><strong>Marque:</strong> <span id="modalMarque"></span></li>
+            <li class="list-group-item"><strong>Modèle:</strong> <span id="modalModele"></span></li>
+            <li class="list-group-item"><strong>Statut:</strong> <span id="modalStatut"></span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Font Awesome (optional for icons) -->
+<script src="https://kit.fontawesome.com/a2e0e6ad4d.js" crossorigin="anonymous"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const selectAll = document.getElementById("selectAll");
+  const rowCheckboxes = document.querySelectorAll(".row-checkbox");
+  const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
+  const form = document.getElementById("articlesForm");
+
+  function updateSelectAll() {
+    const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+    const anyChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+    selectAll.checked = allChecked;
+    bulkDeleteBtn.disabled = !anyChecked;
+  }
+
+  selectAll.addEventListener("change", () => {
+    rowCheckboxes.forEach(cb => cb.checked = selectAll.checked);
+    bulkDeleteBtn.disabled = !selectAll.checked;
+  });
+
+  rowCheckboxes.forEach(cb => cb.addEventListener("change", updateSelectAll));
+
+  bulkDeleteBtn.addEventListener("click", () => {
+    if (confirm("Are you sure you want to delete selected articles?")) {
+      form.submit();
+    }
+  });
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const modal = document.getElementById('viewArticleModal');
+
+  modal.addEventListener('show.bs.modal', function (event) {
+    const button = event.relatedTarget;
+
+   // modal.querySelector('#modalImage').src = button.getAttribute('data-image') || '';
+    modal.querySelector('#modalMatricule').textContent = button.getAttribute('data-matricule');
+    modal.querySelector('#modalZone').textContent = button.getAttribute('data-zone');
+    modal.querySelector('#modalSite').textContent = button.getAttribute('data-site');
+    modal.querySelector('#modalLocal').textContent = button.getAttribute('data-local');
+    modal.querySelector('#modalAffecte').textContent = button.getAttribute('data-affecte');
+    // modal.querySelector('#modalZoneAffect').textContent = button.getAttribute('data-zone-affect');
+    modal.querySelector('#modalQR').textContent = button.getAttribute('data-qr');
+    modal.querySelector('#modalFamille').textContent = button.getAttribute('data-famille');
+    modal.querySelector('#modalDesignation').textContent = button.getAttribute('data-designation');
+    modal.querySelector('#modalSerial').textContent = button.getAttribute('data-serial');
+    modal.querySelector('#modalMarque').textContent = button.getAttribute('data-marque');
+    modal.querySelector('#modalModele').textContent = button.getAttribute('data-modele');
+    modal.querySelector('#modalStatut').textContent = button.getAttribute('data-statut');
+  });
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const searchInput = document.getElementById("articleSearch");
+  const table = document.querySelector("#articlesForm table tbody");
+  const rows = table.querySelectorAll("tr");
+
+  searchInput.addEventListener("keyup", () => {
+    const query = searchInput.value.toLowerCase();
+
+    rows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      if(text.includes(query)) {
+        row.style.display = "";
+      } else {
+        row.style.display = "none";
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Zones{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='clients.css') }}">
+<style>
+    .mui-table th, .mui-table td {
+        vertical-align: middle;
+        text-align: center;
+    }
+    .mui-table th {
+        background-color: #f5f5f5;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header with title + buttons -->
+    <div class="page-header d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4">Zone Management</h2>
+        <div>
+      <a href="{{ url_for('zone_add') }}" class="btn btn-primary me-2">
+        <i class="fas fa-plus-circle me-1"></i> Ajouter
+      </a>
+        <button id="bulkDeleteBtn" class="btn btn-danger" disabled>
+       <i class="fas fa-trash me-1"></i> Supprimer
+      </button>
+      
+    </div>
+    </div>
+
+    <!-- Table card -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>Zones Directory</h5>
+        </div>
+        <div class="card-body p-0">
+            <form id="zonesForm" method="POST" action="">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="table-responsive">
+                    <table class="table table-hover mui-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input class="form-check-input" type="checkbox" id="selectAll">
+                                    </div>
+                                </th>
+                                <th>Nom</th>
+                                <th>Pays</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for zone in zones %}
+                            <tr>
+                                <td>
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input class="form-check-input row-checkbox" type="checkbox" name="zone_ids" value="{{ zone.id }}">
+                                    </div>
+                                </td>
+                                <td>{{ zone.nom }}</td>
+                                <td>{{ zone.pays }}</td>
+                                <td>
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <button type="button" class="btn btn-sm btn-outline-info"
+                                            data-bs-toggle="modal" data-bs-target="#viewZoneModal"
+                                            data-nom="{{ zone.nom }}"
+                                            data-pays="{{ zone.pays }}"
+                                            title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <a href="{{ url_for('zone_edit', id=zone.id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center p-4">
+                                    <i class="fas fa-map-marked-alt fa-2x text-muted"></i>
+                                    <h5 class="mt-2">No Zones Found</h5>
+                                    <p>Click "Add New Zone" to create one</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="viewZoneModal" tabindex="-1" aria-labelledby="viewZoneModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewZoneModalLabel">Zone Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Nom:</strong> <span id="modalNom"></span></p>
+        <p><strong>Pays:</strong> <span id="modalPays"></span></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const selectAll = document.getElementById("selectAll");
+    const rowCheckboxes = document.querySelectorAll(".row-checkbox");
+    const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
+    const form = document.getElementById("zonesForm");
+
+    function updateSelectAll() {
+        const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+        const anyChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+        selectAll.checked = allChecked;
+        bulkDeleteBtn.disabled = !anyChecked;
+    }
+
+    selectAll.addEventListener("change", () => {
+        rowCheckboxes.forEach(cb => cb.checked = selectAll.checked);
+        bulkDeleteBtn.disabled = !selectAll.checked;
+    });
+
+    rowCheckboxes.forEach(cb => cb.addEventListener("change", updateSelectAll));
+
+    bulkDeleteBtn.addEventListener("click", () => {
+        if(confirm("Are you sure you want to delete selected zones?")) {
+            form.action = "{{ url_for('bulk_delete_zones') }}";
+            form.submit();
+        }
+    });
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const selectAll = document.getElementById("selectAll");
+    const rowCheckboxes = document.querySelectorAll(".row-checkbox");
+    const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
+    const form = document.getElementById("zonesForm");
+
+    function updateSelectAll() {
+        const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+        const anyChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+        selectAll.checked = allChecked;
+        bulkDeleteBtn.disabled = !anyChecked;
+    }
+
+    selectAll.addEventListener("change", () => {
+        rowCheckboxes.forEach(cb => cb.checked = selectAll.checked);
+        bulkDeleteBtn.disabled = !selectAll.checked;
+    });
+
+    rowCheckboxes.forEach(cb => cb.addEventListener("change", updateSelectAll));
+
+    bulkDeleteBtn.addEventListener("click", () => {
+        if(confirm("Are you sure you want to delete selected zones?")) {
+            form.action = "{{ url_for('bulk_delete_zones') }}";
+            form.submit();
+        }
+    });
+
+    // Eye icon modal
+    var viewZoneModal = document.getElementById('viewZoneModal')
+    viewZoneModal.addEventListener('show.bs.modal', function (event) {
+      var button = event.relatedTarget
+      var nom = button.getAttribute('data-nom')
+      var pays = button.getAttribute('data-pays')
+
+      var modalNom = viewZoneModal.querySelector('#modalNom')
+      var modalPays = viewZoneModal.querySelector('#modalPays')
+
+      modalNom.textContent = nom
+      modalPays.textContent = pays
+    })
+});
+</script>
+{% endblock %}
