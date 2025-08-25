@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Modifier le Site' if site else 'Ajouter un Site' }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">{{ 'Modifier le Site' if site else 'Ajouter un Nouveau Site' }}</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Nom</label>
+                        <input type="text" name="nom" class="form-control" required 
+                               value="{{ site.nom if site else '' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Zone</label>
+                        <select name="zone_id" class="form-select" required>
+                            <option value="">-- Sélectionner une zone --</option>
+                            {% for zone in zones %}
+                                <option value="{{ zone.id }}" {% if site and site.zone_id == zone.id %}selected{% endif %}>{{ zone.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Type d'établissement</label>
+                        <input type="text" name="type_etablissement" class="form-control" 
+                               value="{{ site.type_etablissement if site else '' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Activités</label>
+                        <input type="text" name="activites" class="form-control" 
+                               value="{{ site.activites if site else '' }}">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Ville</label>
+                        <input type="text" name="ville" class="form-control" 
+                               value="{{ site.ville if site else '' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Pays</label>
+                        <input type="text" name="pays" class="form-control" 
+                               value="{{ site.pays if site else '' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Téléphone</label>
+                        <input type="text" name="telephone" class="form-control" 
+                               value="{{ site.telephone if site else '' }}">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">E-mail</label>
+                        <input type="email" name="email" class="form-control" 
+                               value="{{ site.email if site else '' }}">
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        {{ 'Mettre à jour' if site else 'Ajouter' }}
+                    </button>
+                    <a href="{{ url_for('sites') }}" class="btn btn-secondary">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

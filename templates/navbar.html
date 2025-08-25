@@ -1,0 +1,140 @@
+<!-- Toggle Button -->
+<button id="toggleNavbar" class="btn btn-primary position-fixed"
+        style="top: 20px; left: 20px; z-index: 1051;">☰</button>
+
+<!-- Overlay Sidebar -->
+<nav id="mainNavbar" class="bg-white position-fixed vh-100 shadow"
+     style="width: 220px; top: 0; left: 0; transition: transform 0.3s ease; z-index:1050; border-right: 1px solid #ddd; padding-top: 70px; transform: translateX(-100%);">
+  <div class="d-flex flex-column h-100">
+    <!-- Logo -->
+    <a class="navbar-brand px-3 mb-4 d-flex align-items-center" href="{{ url_for('articles_list') }}">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" style="height: 50px;" class="img-fluid">
+      <span class="ms-2 fw-bold">AssetFlow</span>
+    </a>
+
+    <!-- Menu -->
+    <ul class="nav flex-column" id="sidebarMenu">
+      <li class="nav-item mb-1">
+        <a class="nav-link px-3 py-2 text-dark d-flex align-items-center" href="{{ url_for('articles_list') }}">
+          <i class="bi bi-file-text me-2"></i>
+          <span class="menu-text">Articles</span>
+        </a>
+      </li>
+
+      <li class="nav-item mb-1">
+        <a class="nav-link px-3 py-2 text-dark d-flex align-items-center" href="{{ url_for('famille_list') }}">
+          <i class="bi bi-box-seam me-2"></i>
+          <span class="menu-text">Familles</span>
+        </a>
+      </li>
+
+      <li class="nav-item mb-1">
+        <a class="nav-link px-3 py-2 text-dark d-flex align-items-center" href="{{ url_for('sous_famille_list') }}">
+          <i class="bi bi-boxes me-2"></i>
+          <span class="menu-text">Sous-familles</span>
+        </a>
+      </li>
+
+      <li class="nav-item mb-1">
+  <a class="nav-link px-3 py-2 text-dark d-flex align-items-center" href="{{ url_for('liste_salaries') }}">
+    <i class="bi bi-person-lines-fill me-2"></i>
+    <span class="menu-text">Liste des salariés</span>
+  </a>
+</li>
+
+      <!-- LOCALISATION COLLAPSIBLE -->
+      <li class="nav-item mb-1">
+        <!-- Use a BUTTON as the toggle -->
+        <button id="localisationToggle"
+                type="button"
+                class="nav-link w-100 text-start px-3 py-2 text-dark d-flex align-items-center btn btn-link"
+                style="text-decoration:none;">
+          <i class="bi bi-geo-alt me-2"></i>
+          <span class="menu-text">Localisation</span>
+          <i id="localisationChevron" class="bi bi-chevron-down ms-auto transition"></i>
+        </button>
+
+        <div class="collapse" id="localisationMenu" data-bs-parent="#sidebarMenu">
+          <ul class="nav flex-column ms-3">
+            <li class="nav-item">
+              <a class="nav-link px-3 py-2 text-dark" href="{{ url_for('zones_list') }}">Sociétés</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link px-3 py-2 text-dark" href="{{ url_for('sites') }}">Sites</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link px-3 py-2 text-dark" href="{{ url_for('locaux') }}">Emplacements</a>
+            </li>
+          </ul>
+        </div>
+      </li>
+
+      <li class="nav-item mb-1">
+        <a class="nav-link px-3 py-2 text-dark d-flex align-items-center" href="{{ url_for('scanner_page') }}">
+          <i class="bi bi-upc-scan me-2"></i>
+          <span class="menu-text">Scanner</span>
+        </a>
+      </li>
+    </ul>
+
+    <!-- Footer -->
+    <div class="mt-auto px-3 mb-3">
+      <!--<span class="d-block mb-2">Bienvenue, {{ current_user.username }}</span>-->
+      <a class="btn btn-outline-danger w-100" href="{{ url_for('logout') }}">Quitter</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Dark Overlay -->
+<div id="sidebarOverlay"
+     style="position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.4); z-index:1040; display:none;"></div>
+
+<!-- Bootstrap Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Make sure this is included once -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // Sidebar show/hide
+  let hidden = true;
+  function showSidebar() {
+    $("#mainNavbar").css("transform", "translateX(0)");
+    $("#sidebarOverlay").fadeIn(200);
+    hidden = false;
+  }
+  function hideSidebar() {
+    $("#mainNavbar").css("transform", "translateX(-100%)");
+    $("#sidebarOverlay").fadeOut(200);
+    hidden = true;
+  }
+  $(document).on("click", "#toggleNavbar", function() {
+    if (hidden) showSidebar(); else hideSidebar();
+  });
+  $("#sidebarOverlay").on("click", hideSidebar);
+
+  // Localisation collapse (programmatic & reliable)
+  const locMenuEl = document.getElementById('localisationMenu');
+  const locToggleBtn = document.getElementById('localisationToggle');
+  const locChevron = document.getElementById('localisationChevron');
+
+  const locCollapse = new bootstrap.Collapse(locMenuEl, { toggle: false });
+
+  locToggleBtn.addEventListener('click', function (e) {
+    e.preventDefault();
+    locCollapse.toggle();
+  });
+
+  locMenuEl.addEventListener('show.bs.collapse', function () {
+    locChevron.style.transform = 'rotate(180deg)';
+  });
+  locMenuEl.addEventListener('hide.bs.collapse', function () {
+    locChevron.style.transform = 'rotate(0deg)';
+  });
+</script>
+
+<style>
+  #mainNavbar { overflow-y: auto; }
+  #mainNavbar .nav-link:hover { background-color: #f0f0f0; border-radius: 8px; }
+  .transition { transition: transform 0.2s ease; }
+</style>

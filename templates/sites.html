@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block title %}Sites{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='clients.css') }}">
+<style>
+.mui-table th, .mui-table td { vertical-align: middle; text-align: center; }
+.mui-table th { background-color: #f5f5f5; font-weight: 600; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-header d-flex justify-content-end align-items-center mb-3">
+        <a href="javascript:void(0)" id="exportBtn" class="btn btn-success me-2">
+            <i class="fas fa-file-excel me-1"></i> Exporter
+        </a>
+        <a href="{{ url_for('site_add') }}" class="btn btn-primary me-2">
+            <i class="fas fa-plus-circle me-1"></i> Ajouter
+        </a>
+        <button id="bulkDeleteBtn" class="btn btn-danger" disabled>
+            <i class="fas fa-trash me-1"></i> Supprimer
+        </button>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-building me-2"></i>Liste des Sites</h5>
+        </div>
+        <div class="card-body p-0">
+            <form id="sitesForm" method="POST" action="">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="table-responsive">
+                    <table class="table table-hover mui-table">
+                        <thead>
+                            <tr>
+                                <th><div class="form-check d-flex justify-content-center">
+                                    <input class="form-check-input" type="checkbox" id="selectAll">
+                                </div></th>
+                                <th>Nom</th>
+                                <th>Zone</th>
+                                <th>Type d'établissement</th>
+                                <th>Activités</th>
+                                <th>Ville</th>
+                                <th>Pays</th>
+                                <th>E-mail</th>
+                                <th>Téléphone</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for site in sites %}
+                            <tr>
+                                <td><div class="form-check d-flex justify-content-center">
+                                    <input class="form-check-input row-checkbox" type="checkbox" name="site_ids" value="{{ site.id }}">
+                                </div></td>
+                                <td>{{ site.nom }}</td>
+                                <td>{{ site.zone.nom }}</td>
+                                <td>{{ site.type_etablissement }}</td>
+                                <td>{{ site.activites }}</td>
+                                <td>{{ site.ville }}</td>
+                                <td>{{ site.pays }}</td>
+                                <td>{{ site.email }}</td>
+                                <td>{{ site.telephone }}</td>
+                                <td>
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <button type="button" class="btn btn-sm btn-outline-info"
+                                            data-bs-toggle="modal" data-bs-target="#viewSiteModal"
+                                            data-id="{{ site.id }}"
+                                            data-nom="{{ site.nom }}"
+                                            data-zone="{{ site.zone.nom }}"
+                                            data-type="{{ site.type_etablissement }}"
+                                            data-activites="{{ site.activites }}"
+                                            data-ville="{{ site.ville }}"
+                                            data-pays="{{ site.pays }}"
+                                            data-email="{{ site.email }}"
+                                            data-telephone="{{ site.telephone }}"
+                                            title="Voir">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <a href="{{ url_for('site_add', id=site.id) }}" class="btn btn-sm btn-outline-primary" title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="10" class="text-center p-4">
+                                    <i class="fas fa-building fa-2x text-muted"></i>
+                                    <h5 class="mt-2">Aucun site trouvé</h5>
+                                    <p>Cliquez sur "Ajouter" pour créer un nouveau site</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="viewSiteModal" tabindex="-1" aria-labelledby="viewSiteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewSiteModalLabel">Détail</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Nom :</strong> <span id="modalNom"></span></p>
+        <p><strong>Zone :</strong> <span id="modalZone"></span></p>
+        <p><strong>Type d'établissement :</strong> <span id="modalType"></span></p>
+        <p><strong>Activités :</strong> <span id="modalActivites"></span></p>
+        <p><strong>Ville :</strong> <span id="modalVille"></span></p>
+        <p><strong>Pays :</strong> <span id="modalPays"></span></p>
+        <p><strong>E-mail :</strong> <span id="modalEmail"></span></p>
+        <p><strong>Téléphone :</strong> <span id="modalTelephone"></span></p>
+      </div>
+      <div class="modal-footer">
+        <a id="editSiteBtn" href="#" class="btn btn-primary">Modifier</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const selectAll = document.getElementById("selectAll");
+    const rowCheckboxes = document.querySelectorAll(".row-checkbox");
+    const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
+    const form = document.getElementById("sitesForm");
+
+    function updateSelectAll() {
+        const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+        const anyChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+        selectAll.checked = allChecked;
+        bulkDeleteBtn.disabled = !anyChecked;
+    }
+
+    selectAll.addEventListener("change", () => {
+        rowCheckboxes.forEach(cb => cb.checked = selectAll.checked);
+        bulkDeleteBtn.disabled = !selectAll.checked;
+    });
+
+    rowCheckboxes.forEach(cb => cb.addEventListener("change", updateSelectAll));
+
+    bulkDeleteBtn.addEventListener("click", () => {
+        if(confirm("Êtes-vous sûr de vouloir supprimer les sites sélectionnés?")) {
+            form.submit();
+        }
+    });
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const selectAll = document.getElementById("selectAll");
+    const rowCheckboxes = document.querySelectorAll(".row-checkbox");
+    const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
+    const form = document.getElementById("sitesForm");
+
+    function updateSelectAll() {
+        const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+        const anyChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+        selectAll.checked = allChecked;
+        bulkDeleteBtn.disabled = !anyChecked;
+    }
+
+    selectAll.addEventListener("change", () => {
+        rowCheckboxes.forEach(cb => cb.checked = selectAll.checked);
+        bulkDeleteBtn.disabled = !selectAll.checked;
+    });
+
+    rowCheckboxes.forEach(cb => cb.addEventListener("change", updateSelectAll));
+
+    bulkDeleteBtn.addEventListener("click", () => {
+        if(confirm("Êtes-vous sûr de vouloir supprimer les sites sélectionnés?")) {
+            form.submit();
+        }
+    });
+
+    // Eye icon modal
+var viewSiteModal = document.getElementById('viewSiteModal');
+viewSiteModal.addEventListener('show.bs.modal', function (event) {
+    var button = event.relatedTarget;
+
+    // Get values from button attributes
+    var id           = button.getAttribute('data-id');
+    var nom          = button.getAttribute('data-nom');
+    var zone         = button.getAttribute('data-zone');
+    var type_etab    = button.getAttribute('data-type');
+    var activites    = button.getAttribute('data-activites');
+    var ville        = button.getAttribute('data-ville');
+    var pays         = button.getAttribute('data-pays');
+    var email        = button.getAttribute('data-email');
+    var telephone    = button.getAttribute('data-telephone');
+
+    // Fill modal fields
+    document.getElementById('modalNom').textContent        = nom;
+    document.getElementById('modalZone').textContent       = zone;
+    document.getElementById('modalType').textContent       = type_etab;
+    document.getElementById('modalActivites').textContent  = activites;
+    document.getElementById('modalVille').textContent      = ville;
+    document.getElementById('modalPays').textContent       = pays;
+    document.getElementById('modalEmail').textContent      = email;
+    document.getElementById('modalTelephone').textContent  = telephone;
+
+    // Edit button redirect
+    var editBtn = viewSiteModal.querySelector('#editSiteBtn');
+    editBtn.onclick = function () {
+        window.location.href = `/site_add?id=${id}`;
+    };
+});
+});
+</script>
+
+<!-- ExcelJS for styled Excel export -->
+<script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+<script>
+document.getElementById("exportBtn").addEventListener("click", async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Sites");
+
+    // Grab table
+    const table = document.querySelector("#sitesForm table");
+
+    // ===== Headers =====
+    const headers = [];
+    table.querySelectorAll("thead th").forEach((th, index) => {
+        if(index !== 0 && index !== table.querySelectorAll("thead th").length - 1){ 
+            headers.push(th.textContent.trim());
+        }
+    });
+
+    const headerRow = worksheet.addRow(headers);
+
+    // Style header row (blue background, white bold text, centered)
+    headerRow.eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "0070C0" }
+        };
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+        cell.border = {
+            top: { style: "thin", color: { argb: "000000" } },
+            left: { style: "thin", color: { argb: "000000" } },
+            bottom: { style: "thin", color: { argb: "000000" } },
+            right: { style: "thin", color: { argb: "000000" } }
+        };
+    });
+
+    // ===== Data Rows =====
+    table.querySelectorAll("tbody tr").forEach(tr => {
+        if(tr.style.display !== "none"){
+            const rowData = [];
+            tr.querySelectorAll("td").forEach((td, index) => {
+                if(index !== 0 && index !== tr.querySelectorAll("td").length - 1){
+                    rowData.push(td.textContent.trim());
+                }
+            });
+            worksheet.addRow(rowData);
+        }
+    });
+
+    // ===== Auto column width =====
+    worksheet.columns.forEach(column => {
+        let maxLength = 0;
+        column.eachCell({ includeEmpty: true }, cell => {
+            const value = cell.value ? cell.value.toString() : "";
+            maxLength = Math.max(maxLength, value.length);
+        });
+        column.width = maxLength < 12 ? 12 : maxLength + 2;
+    });
+
+    // ===== Export File =====
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/octet-stream" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "sites.xlsx";
+    link.click();
+});
+</script>
+{% endblock %}

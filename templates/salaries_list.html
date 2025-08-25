@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}Liste des salariés{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='clients.css') }}">
+<style>
+    .mui-table th, .mui-table td { vertical-align: middle; text-align: center; }
+    .mui-table th { background-color: #f5f5f5; font-weight: 600; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <div class="page-header d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4"></h2>
+        <div>
+            <a href="javascript:void(0)" id="exportBtn" class="btn btn-success me-2">
+                <i class="fas fa-file-excel me-1"></i> Exporter
+            </a>
+            <a href="javascript:void(0)" class="btn btn-info me-2" data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="fas fa-file-import me-1"></i> Importer
+            </a>
+            <a href="{{ url_for('salarie_add_edit') }}" class="btn btn-primary me-2">
+                <i class="fas fa-plus-circle me-1"></i> Ajouter
+            </a>
+            <button id="bulkDeleteBtn" class="btn btn-danger" disabled>
+                <i class="fas fa-trash me-1"></i> Supprimer
+            </button>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <input type="text" id="searchInput" class="form-control" placeholder="Rechercher par matricule, nom ou département...">
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-users me-2"></i>Salariés Directory</h5>
+        </div>
+        <div class="card-body p-0">
+            <form id="salariesForm" method="POST" action="">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="table-responsive">
+                    <table class="table table-hover mui-table" id="salariesTable">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input class="form-check-input" type="checkbox" id="selectAll">
+                                    </div>
+                                </th>
+                                <th>Matricule</th>
+                                <th>Nom et Prénom</th>
+                                <th>Département</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for salarie in salaries %}
+                            <tr>
+                                <td>
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input class="form-check-input row-checkbox" type="checkbox" name="salarie_ids" value="{{ salarie.id }}">
+                                    </div>
+                                </td>
+                                <td>{{ salarie.matricule }}</td>
+                                <td>{{ salarie.nom_prenom }}</td>
+                                <td>{{ salarie.departement }}</td>
+                                <td>
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <button type="button" class="btn btn-sm btn-outline-info"
+                                            data-bs-toggle="modal" data-bs-target="#viewSalarieModal"
+                                            data-id="{{ salarie.id }}"
+                                            data-matricule="{{ salarie.matricule }}"
+                                            data-nom_prenom="{{ salarie.nom_prenom }}"
+                                            data-departement="{{ salarie.departement }}"
+                                            title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <a href="{{ url_for('salarie_add_edit', id=salarie.id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center p-4">
+                                    <i class="fas fa-users fa-2x text-muted"></i>
+                                    <h5 class="mt-2">No Salariés Found</h5>
+                                    <p>Click "Ajouter" to create one</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Modal -->
+<div class="modal fade" id="viewSalarieModal" tabindex="-1" aria-labelledby="viewSalarieModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewSalarieModalLabel">Détail</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Matricule:</strong> <span id="modalMatricule"></span></p>
+        <p><strong>Nom et Prénom:</strong> <span id="modalNomPrenom"></span></p>
+        <p><strong>Département:</strong> <span id="modalDepartement"></span></p>
+      </div>
+      <div class="modal-footer">
+        <a id="modalEditBtn" class="btn btn-primary" href="#">Modifier</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="importForm" enctype="multipart/form-data">
+        <div class="modal-header">
+          <h5 class="modal-title" id="importModalLabel">Importer un fichier Excel</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <input type="file" class="form-control" id="importFile" accept=".xlsx,.xls">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="button" id="confirmImportBtn" class="btn btn-primary">Importer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+<meta name="csrf-token" content="{{ csrf_token() }}">
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const selectAll = document.getElementById("selectAll");
+    const rowCheckboxes = document.querySelectorAll(".row-checkbox");
+    const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
+    const form = document.getElementById("salariesForm");
+
+    /* -------- SELECT ALL / BULK DELETE -------- */
+    function updateSelectAll() {
+        const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+        const anyChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+        selectAll.checked = allChecked;
+        bulkDeleteBtn.disabled = !anyChecked;
+    }
+
+    selectAll.addEventListener("change", () => {
+        rowCheckboxes.forEach(cb => cb.checked = selectAll.checked);
+        bulkDeleteBtn.disabled = !selectAll.checked;
+    });
+
+    rowCheckboxes.forEach(cb => cb.addEventListener("change", updateSelectAll));
+
+    bulkDeleteBtn.addEventListener("click", () => {
+        if(confirm("Êtes-vous sûr de vouloir supprimer les salariés sélectionnés ?")) {
+            form.action = "{{ url_for('bulk_delete_salaries') }}";
+            form.submit();
+        }
+    });
+
+    /* -------- VIEW MODAL -------- */
+    const viewSalarieModal = document.getElementById('viewSalarieModal');
+    viewSalarieModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+
+        const id = button.getAttribute('data-id');
+        const matricule = button.getAttribute('data-matricule');
+        const nomPrenom = button.getAttribute('data-nom_prenom');
+        const departement = button.getAttribute('data-departement');
+
+        document.getElementById('modalMatricule').textContent = matricule;
+        document.getElementById('modalNomPrenom').textContent = nomPrenom;
+        document.getElementById('modalDepartement').textContent = departement;
+
+        // Dynamically update Modifier button
+        const editBtn = document.getElementById('modalEditBtn');
+        if (editBtn) {
+            editBtn.setAttribute('href', `/salarie/${id}`);
+        }
+    });
+
+    /* -------- LIVE SEARCH -------- */
+    const searchInput = document.getElementById("searchInput");
+    searchInput.addEventListener("keyup", () => {
+        const filter = searchInput.value.toLowerCase();
+        const rows = document.querySelectorAll("#salariesTable tbody tr");
+        rows.forEach(row => {
+            const matricule = row.cells[1]?.textContent.toLowerCase() || "";
+            const nom = row.cells[2]?.textContent.toLowerCase() || "";
+            const dept = row.cells[3]?.textContent.toLowerCase() || "";
+            row.style.display = (matricule.includes(filter) || nom.includes(filter) || dept.includes(filter)) ? "" : "none";
+        });
+    });
+
+    /* -------- EXPORT EXCEL -------- */
+    document.getElementById("exportBtn").addEventListener("click", async () => {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("Salariés");
+        const table = document.querySelector("#salariesTable");
+
+        // Headers
+        const headers = [];
+        table.querySelectorAll("thead th").forEach((th, index) => {
+            if (index !== 0 && index !== table.querySelectorAll("thead th").length - 1) {
+                headers.push(th.textContent.trim());
+            }
+        });
+        const headerRow = worksheet.addRow(headers);
+        headerRow.eachCell(cell => {
+            cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+            cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "0070C0" } };
+            cell.alignment = { horizontal: "center", vertical: "middle" };
+            cell.border = { top: {style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
+        });
+
+        // Data
+        table.querySelectorAll("tbody tr").forEach(tr => {
+            if (tr.style.display !== "none") {
+                const rowData = [];
+                tr.querySelectorAll("td").forEach((td, index) => {
+                    if (index !== 0 && index !== tr.querySelectorAll("td").length - 1) {
+                        rowData.push(td.textContent.trim());
+                    }
+                });
+                worksheet.addRow(rowData);
+            }
+        });
+
+        // Auto width
+        worksheet.columns.forEach(column => {
+            let maxLength = 0;
+            column.eachCell({ includeEmpty: true }, cell => {
+                const value = cell.value ? cell.value.toString() : "";
+                maxLength = Math.max(maxLength, value.length);
+            });
+            column.width = maxLength < 12 ? 12 : maxLength + 2;
+        });
+
+        // Download
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: "application/octet-stream" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "salaries.xlsx";
+        link.click();
+    });
+
+    /* -------- IMPORT EXCEL -------- */
+    document.getElementById("confirmImportBtn").addEventListener("click", async () => {
+        const fileInput = document.getElementById("importFile");
+        if (!fileInput.files.length) {
+            alert("Veuillez choisir un fichier Excel.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        try {
+            const res = await fetch("{{ url_for('import_salaries') }}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": document.querySelector('meta[name="csrf-token"]').getAttribute("content")
+                },
+                body: formData
+            });
+
+            const contentType = res.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                const result = await res.json();
+                if (result.success) {
+                    alert("Importation réussie ✅");
+                    location.reload();
+                } else {
+                    alert("Erreur d'import: " + result.error);
+                }
+            } else {
+                throw new Error("Réponse serveur invalide (pas JSON)");
+            }
+        } catch (err) {
+            alert("Erreur lors de l'import: " + err.message);
+        }
+    });
+});
+</script>
+{% endblock %}

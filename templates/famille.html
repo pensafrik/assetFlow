@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}Familles{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='clients.css') }}">
+<style>
+.mui-table th, .mui-table td {
+    vertical-align: middle;
+    text-align: center;
+}
+.mui-table th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-header d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4"></h2>
+        <div class="d-flex justify-content-end align-items-center mb-3 gap-2">
+            <button id="exportBtn" class="btn btn-success">
+                <i class="fas fa-file-excel me-1"></i> Exporter 
+            </button>
+            <a href="{{ url_for('famille_add') }}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-1"></i> Ajouter 
+            </a>
+            <button id="bulkDeleteBtn" class="btn btn-danger" disabled>
+                <i class="fas fa-trash me-1"></i> Supprimer 
+            </button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-boxes me-2"></i>Liste des familles</h5>
+        </div>
+        <div class="card-body p-0">
+            <form id="familleForm" method="POST" action="">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="table-responsive">
+                    <table id="familleTable" class="table table-hover mui-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input class="form-check-input" type="checkbox" id="selectAll">
+                                    </div>
+                                </th>
+                                <th>Nom</th>
+                                <th>Code</th>
+                                <!--<th>Type</th>
+                                <th>Département</th>-->
+                                <th>Commentaire</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for f in familles %}
+                            <tr>
+                                <td>
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input class="form-check-input row-checkbox" type="checkbox" name="famille_ids" value="{{ f.id }}">
+                                    </div>
+                                </td>
+                                <td>{{ f.nom }}</td>
+                                <td>{{ f.code }}</td>
+                                <!--<td>{{ f.type }}</td>
+                                <td>{{ f.departement }}</td>-->
+                                <td>{{ f.description }}</td>
+                                <td>
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <button type="button" class="btn btn-sm btn-outline-info view-famille-btn"
+                                                data-bs-toggle="modal" data-bs-target="#viewFamilleModal"
+                                                data-id="{{ f.id }}"
+                                                data-nom="{{ f.nom }}"
+                                                data-code="{{ f.code }}"
+                                                data-description="{{ f.description }}"
+                                                title="Visualiser">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <a href="{{ url_for('famille_edit', id=f.id) }}" class="btn btn-sm btn-outline-primary" title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center p-4">
+                                    <i class="fas fa-folder-open fa-2x text-muted"></i>
+                                    <h5 class="mt-2">Aucune famille trouvée</h5>
+                                    <p>Cliquez sur "Ajouter une famille" pour en créer une</p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de visualisation de la famille -->
+<div class="modal fade" id="viewFamilleModal" tabindex="-1" aria-labelledby="viewFamilleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewFamilleModalLabel">Détail</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="list-group">
+          <li class="list-group-item"><strong>Nom :</strong> <span id="modalNom"></span></li>
+          <li class="list-group-item"><strong>Code :</strong> <span id="modalCode"></span></li>
+          <!--<li class="list-group-item"><strong>Type :</strong> <span id="modalType"></span></li>
+          <li class="list-group-item"><strong>Département :</strong> <span id="modalDepartement"></span></li>-->
+          <li class="list-group-item"><strong>Commentaire :</strong> <span id="modalDescription"></span></li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <a id="modalEditBtn" class="btn btn-primary" href="#">Modifier</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const selectAll = document.getElementById("selectAll");
+    const rowCheckboxes = document.querySelectorAll(".row-checkbox");
+    const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
+    const form = document.getElementById("familleForm");
+
+    function updateSelectAll() {
+        const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+        const anyChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+        selectAll.checked = allChecked;
+        bulkDeleteBtn.disabled = !anyChecked;
+    }
+
+    selectAll.addEventListener("change", () => {
+        rowCheckboxes.forEach(cb => cb.checked = selectAll.checked);
+        bulkDeleteBtn.disabled = !selectAll.checked;
+    });
+
+    rowCheckboxes.forEach(cb => cb.addEventListener("change", updateSelectAll));
+
+    bulkDeleteBtn.addEventListener("click", () => {
+        if(confirm("Êtes-vous sûr de vouloir supprimer les familles sélectionnées ?")) {
+            form.action = "{{ url_for('famille_bulk_delete') }}";
+            form.submit();
+        }
+    });
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const modal = document.getElementById('viewFamilleModal');
+
+  modal.addEventListener('show.bs.modal', function (event) {
+    const button = event.relatedTarget;
+    const id = button.getAttribute('data-id');
+    const nom = button.getAttribute('data-nom');
+    const code = button.getAttribute('data-code');
+    const description = button.getAttribute('data-description');
+
+    modal.querySelector('#modalNom').textContent = nom;
+    modal.querySelector('#modalCode').textContent = code;
+    modal.querySelector('#modalDescription').textContent = description;
+
+    modal.querySelector('#modalEditBtn').href = `famille/edit/${id}`;
+  });
+});
+</script>
+
+<!-- Exporter ExcelJS -->
+<script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+<script>
+document.getElementById("exportBtn").addEventListener("click", async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Familles");
+
+    const table = document.querySelector("#familleForm table");
+
+    // ===== Entêtes =====
+    const headers = [];
+    table.querySelectorAll("thead th").forEach((th, index) => {
+        if (index !== 0 && index !== table.querySelectorAll("thead th").length - 1) { 
+            headers.push(th.textContent.trim());
+        }
+    });
+
+    const headerRow = worksheet.addRow(headers);
+
+    headerRow.eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "0070C0" }
+        };
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+        cell.border = {
+            top: { style: "thin", color: { argb: "000000" } },
+            left: { style: "thin", color: { argb: "000000" } },
+            bottom: { style: "thin", color: { argb: "000000" } },
+            right: { style: "thin", color: { argb: "000000" } }
+        };
+    });
+
+    // ===== Données =====
+    table.querySelectorAll("tbody tr").forEach(tr => {
+        if (tr.style.display !== "none") {
+            const rowData = [];
+            tr.querySelectorAll("td").forEach((td, index) => {
+                if (index !== 0 && index !== tr.querySelectorAll("td").length - 1) { 
+                    rowData.push(td.textContent.trim());
+                }
+            });
+            worksheet.addRow(rowData);
+        }
+    });
+
+    // ===== Largeur auto des colonnes =====
+    worksheet.columns.forEach(column => {
+        let maxLength = 0;
+        column.eachCell({ includeEmpty: true }, cell => {
+            const value = cell.value ? cell.value.toString() : "";
+            maxLength = Math.max(maxLength, value.length);
+        });
+        column.width = maxLength < 12 ? 12 : maxLength + 2;
+    });
+
+    // ===== Exporter =====
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/octet-stream" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "familles.xlsx";
+    link.click();
+});
+</script>
+{% endblock %}
