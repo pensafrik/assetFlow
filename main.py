@@ -5,6 +5,7 @@ import os
 import signal
 import webbrowser
 import threading
+import pandas as pd
 
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
@@ -12,7 +13,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 from werkzeug.utils import secure_filename
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 
@@ -91,7 +92,7 @@ class Article(db.Model):
     sous_famille = db.relationship('SousFamille', backref='articles')
     affecte_a = db.Column(db.String(150))
     statut = db.Column(db.String(50))  # <-- Add this
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.utcnow() + timedelta(hours=1))
 
 
 class Famille(db.Model):
@@ -117,7 +118,7 @@ class SousFamille(db.Model):
     code_barres = db.Column(db.String(100))
     unite = db.Column(db.String(50))
     description = db.Column(db.Text)
-    periode_depreciation = db.Column(db.Integer)
+    commentaire = db.Column(db.String(255))
     image = db.Column(db.String(200))
 
     famille_id = db.Column(db.Integer, db.ForeignKey("famille.id"), nullable=False)
@@ -154,7 +155,7 @@ class ScanHistory(db.Model):
     matricule = db.Column(db.String(50))
     
     # 👇 Add this
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.utcnow() + timedelta(hours=1))
 
 class Zone(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -178,7 +179,7 @@ class Locaux(db.Model):
     etage = db.Column(db.String(50))
     nom = db.Column(db.String(150), nullable=False)
     code = db.Column(db.String(50))
-    tag_rfid = db.Column(db.String(100))
+    
     commentaires = db.Column(db.Text)
     dernier_inventaire = db.Column(db.DateTime)
     
@@ -190,7 +191,7 @@ class Salarie(db.Model):
     matricule = db.Column(db.String(20), unique=True, nullable=False)
     nom_prenom = db.Column(db.String(100), nullable=False)
     departement = db.Column(db.String(50), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.utcnow() + timedelta(hours=1))
 
 # -----------------------------
 # User loader
@@ -238,9 +239,8 @@ def login():
 def logout():
     logout_user()
     session.clear()
-    shutdown_server()
-    return "Application closed."
-
+    flash("Déconnection avec succès !", "succès")
+    return redirect(url_for('login'))
 
 # -----------------------------
 # Articles Routes
@@ -254,6 +254,7 @@ def articles_list():
 
 @app.route("/articles/add", methods=["GET", "POST"])
 @app.route("/articles/edit/<int:id>", methods=["GET", "POST"])
+@login_required
 def article_add_edit(id=None):
     article = Article.query.get(id) if id else None
 
@@ -486,7 +487,7 @@ def sous_famille_add():
             code_barres=request.form.get('code_barres'),
             unite=request.form.get('unite'),
             description=request.form.get('description'),
-            periode_depreciation=request.form.get('periode_depreciation'),
+            commentaire=request.form.get('commentaire'),
             image=request.form.get('image')
         )
         db.session.add(sf)
@@ -502,12 +503,21 @@ def sous_famille_add():
 @login_required
 def sous_famille_edit(id):
     sous_famille = SousFamille.query.get_or_404(id)
+    familles = Famille.query.order_by(Famille.nom.asc()).all()  # add this
     if request.method == 'POST':
+        sous_famille.famille_id = request.form['famille_id']  # also update famille_id
         sous_famille.nom = request.form['nom']
+        sous_famille.code = request.form.get('code')
+        sous_famille.code_barres = request.form.get('code_barres')
+        sous_famille.unite = request.form.get('unite')
+        sous_famille.description = request.form.get('description')
+        sous_famille.commentaire = request.form.get('commentaire')
+        sous_famille.image = request.form.get('image')
         db.session.commit()
         flash('Sous-famille mise à jour avec succès', 'success')
         return redirect(url_for('sous_famille_list'))
-    return render_template('sous_famille_edit.html', sous_famille=sous_famille)
+
+    return render_template('sous_famille_form.html', sous_famille=sous_famille, familles=familles)
 
 @app.route('/sous-famille/delete/<int:id>', methods=['POST'])
 @login_required
@@ -538,15 +548,9 @@ def sous_famille_bulk_delete():
 import random
 import string
 
-# -----------------------------
-# Scanner route
-# -----------------------------
 @app.route('/scanner', methods=['GET', 'POST'])
 @login_required
 def scanner_page():
-    # -------------------
-    # Fetch article if barcode is in URL (for pre-filling the form)
-    # -------------------
     barcode = request.args.get('barcode')
     article = None
     if barcode:
@@ -554,46 +558,47 @@ def scanner_page():
 
     if request.method == 'POST':
         barcode = request.form.get('barcode')
+        famille_id = request.form.get('famille')
+        famille = Famille.query.get(famille_id) if famille_id else None
+
         if not barcode:
             flash("Barcode is required!", "danger")
             return redirect(url_for('scanner_page'))
 
-        # Try to find existing article by barcode
+        # Check if article exists
         article = Article.query.filter_by(qr_code=barcode).first()
         if not article:
-            # Generate random 10-character matricule
-            random_matricule = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
-            article = Article(qr_code=barcode, matricule=random_matricule)
+            # Generate matricule: use famille code if available + random digits
+            code_part = famille.code.upper() if famille and famille.code else ''.join(random.choices(string.ascii_uppercase, k=2))
+            random_part = ''.join(random.choices(string.digits, k=8))
+            matricule = f"{code_part}{random_part}"
+            article = Article(qr_code=barcode, matricule=matricule)
             db.session.add(article)
 
-        # Update fields from form, including marque and modele
+        # Update article fields from form
         article.zone_id = request.form.get('zone') or None
         article.site_id = request.form.get('site') or None
         article.local_id = request.form.get('local') or None
         article.affecte_a = request.form.get('affecte_a')
-        # article.zone_affectation = request.form.get('zone_affectation')
-        article.famille_id = request.form.get('famille') or None
+        article.famille_id = famille_id or None
         article.sous_famille_id = request.form.get('sous_famille') or None
         article.designation = request.form.get('designation')
         article.serial_number = request.form.get('serial_number')
-        article.marque = request.form.get('marque')  # <-- added
-        article.modele = request.form.get('modele')  # <-- added
+        article.marque = request.form.get('marque')
+        article.modele = request.form.get('modele')
         article.statut = request.form.get('statut')
 
         db.session.commit()
         flash("Article saved successfully!", "success")
-        return redirect(url_for('scanner_page', barcode=barcode))  # keep barcode to pre-fill
+        return redirect(url_for('scanner_page', barcode=barcode))  # Keep barcode to pre-fill
 
-    # Load data for dropdowns
-    familles = [{"id": f.id, "nom": f.nom} for f in Famille.query.order_by(Famille.nom).all()]
+    # Load dropdowns and history
+    familles = [{"id": f.id, "nom": f.nom, "code": f.code} for f in Famille.query.order_by(Famille.nom).all()]
     sous_familles = [{"id": sf.id, "nom": sf.nom, "famille_id": sf.famille_id} for sf in SousFamille.query.order_by(SousFamille.nom).all()]
     sites = [{"id": s.id, "nom": s.nom} for s in Site.query.order_by(Site.nom).all()]
     zones = Zone.query.order_by(Zone.nom).all()
     locaux = Locaux.query.order_by(Locaux.nom).all()
-
-    # Load recent 10 articles for history
     history = Article.query.order_by(Article.id.desc()).limit(10).all()
-
     salaries = Salarie.query.order_by(Salarie.nom_prenom).all()
 
     return render_template(
@@ -605,7 +610,7 @@ def scanner_page():
         locaux=locaux,
         articles=history,
         article=article,
-        salaries=salaries  # <-- pass the article for pre-filling marque/modele
+        salaries=salaries
     )
 # -----------------------------
 # API: Get Article by Barcode
@@ -618,15 +623,18 @@ def get_article_by_barcode(barcode):
 
     return jsonify({
         "id": article.id,
+        "matricule": article.matricule,
         "zone_id": article.zone_id,
         "site_id": article.site_id,
         "local_id": article.local_id,
-        "affecte_a": article.affecte_a,
-        #"zone_affectation": article.zone_affectation,
+        "affecte_a": article.affecte_a if article.affecte_a else "",
         "famille_id": article.famille_id,
         "sous_famille_id": article.sous_famille_id,
         "designation": article.designation,
-        "serial_number": article.serial_number
+        "serial_number": article.serial_number,
+        "marque": article.marque,
+        "modele": article.modele,
+        "statut": article.statut
     }), 200
 # -----------------------------
 # Localisation Routes
@@ -681,7 +689,7 @@ def zone_edit(id):
         zone.pays = request.form.get("pays")
 
         db.session.commit()
-        flash("Zone updated successfully!", "success")
+        flash("Zone modifiée avec succés!", "success")
         return redirect(url_for("zones_list"))
 
     return render_template("zone_form.html", zone=zone)
@@ -824,9 +832,9 @@ def locaux_add():
         site_id = request.form['site_id']
         batiment = request.form['batiment']
         etage = request.form['etage']
-        nom = request.form['nom']
+        nom = request.form.get('nom')
         code = request.form['code']
-        tag_rfid = request.form['tag_rfid']
+        
         commentaires = request.form['commentaires']
 
         if locaux_item:
@@ -837,7 +845,7 @@ def locaux_add():
             locaux_item.etage = etage
             locaux_item.nom = nom
             locaux_item.code = code
-            locaux_item.tag_rfid = tag_rfid
+            
             locaux_item.commentaires = commentaires
             flash("Locaux updated successfully!", "success")
         else:
@@ -849,7 +857,6 @@ def locaux_add():
                 etage=etage,
                 nom=nom,
                 code=code,
-                tag_rfid=tag_rfid,
                 commentaires=commentaires
             )
             db.session.add(new_locaux)
@@ -868,6 +875,17 @@ def locaux_delete(id):
     db.session.delete(locaux_item)
     db.session.commit()
     flash("Locaux deleted successfully!", "success")
+    return redirect(url_for('locaux'))
+
+@app.route('/locaux/delete', methods=['POST'])
+def locaux_bulk_delete():
+    ids = request.form.getlist('locaux_ids')  # checkbox values
+    for id in ids:
+        l = Locaux.query.get(id)
+        if l:
+            db.session.delete(l)
+    db.session.commit()
+    flash(f"{len(ids)} locaux deleted.", "success")
     return redirect(url_for('locaux'))
 
 @app.route('/salaries')
@@ -937,11 +955,54 @@ def bulk_delete_salaries():
 
     return redirect(url_for('liste_salaries'))
 
+from flask import request, jsonify
+import pandas as pd
+from datetime import datetime
+
+@app.route('/import_salaries', methods=['POST'])
+def import_salaries():
+    try:
+        file = request.files.get("file")
+        if not file:
+            return jsonify({"success": False, "error": "No file uploaded"}), 400
+
+        df = pd.read_excel(file)
+
+        for _, row in df.iterrows():
+            # Convert to string safely
+            matricule = str(row.get("Matricule", "")).strip() if pd.notna(row.get("Matricule")) else ""
+            nom_prenom = str(row.get("Nom et Prénom", "")).strip() if pd.notna(row.get("Nom et Prénom")) else ""
+            departement = str(row.get("Département", "")).strip() if pd.notna(row.get("Département")) else ""
+
+            if not matricule:
+                # Skip rows with empty matricule
+                continue
+
+            # Check if salarie already exists
+            existing = Salarie.query.filter_by(matricule=matricule).first()
+            if existing:
+                existing.nom_prenom = nom_prenom
+                existing.departement = departement
+            else:
+                new_salarie = Salarie(
+                    matricule=matricule,
+                    nom_prenom=nom_prenom,
+                    departement=departement,
+                    created_at=datetime.utcnow() + timedelta(hours=1)
+                )
+                db.session.add(new_salarie)
+
+        db.session.commit()
+        return jsonify({"success": True})
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
 # -----------------------------
 # Helpers
 # -----------------------------
-def shutdown_server():
-    os.kill(os.getpid(), signal.SIGTERM)
+#def shutdown_server():
+#    os.kill(os.getpid(), signal.SIGTERM)
 
 
 def open_browser():

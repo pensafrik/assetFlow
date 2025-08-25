@@ -15,6 +15,9 @@
     <div class="page-header d-flex justify-content-between align-items-center mb-3">
         <h2 class="h4">Sites Management</h2>
         <div>
+            <a href="javascript:void(0)" id="exportBtn" class="btn btn-success me-2">
+    <i class="fas fa-file-excel me-1"></i> Export Excel
+</a>
       <a href="{{ url_for('site_add') }}" class="btn btn-primary me-2">
         <i class="fas fa-plus-circle me-1"></i> Ajouter
       </a>
@@ -68,6 +71,7 @@
                                     <div class="d-flex gap-1 justify-content-center">
                                         <button type="button" class="btn btn-sm btn-outline-info"
                                             data-bs-toggle="modal" data-bs-target="#viewSiteModal"
+                                            data-id="{{ site.id }}"
                                             data-nom="{{ site.nom }}"
                                             data-zone="{{ site.zone.nom }}"
                                             data-type="{{ site.type_etablissement }}"
@@ -120,7 +124,8 @@
         <p><strong>Téléphone:</strong> <span id="modalTelephone"></span></p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <a id="editSiteBtn"  href="#" class="btn btn-primary">Modifier</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
       </div>
     </div>
   </div>
@@ -184,18 +189,107 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Eye icon modal
-    var viewSiteModal = document.getElementById('viewSiteModal');
-    viewSiteModal.addEventListener('show.bs.modal', function (event) {
-      var button = event.relatedTarget;
-      document.getElementById('modalNom').textContent = button.getAttribute('data-nom');
-      document.getElementById('modalZone').textContent = button.getAttribute('data-zone');
-      document.getElementById('modalType').textContent = button.getAttribute('data-type');
-      document.getElementById('modalActivites').textContent = button.getAttribute('data-activites');
-      document.getElementById('modalVille').textContent = button.getAttribute('data-ville');
-      document.getElementById('modalPays').textContent = button.getAttribute('data-pays');
-      document.getElementById('modalEmail').textContent = button.getAttribute('data-email');
-      document.getElementById('modalTelephone').textContent = button.getAttribute('data-telephone');
+var viewSiteModal = document.getElementById('viewSiteModal');
+viewSiteModal.addEventListener('show.bs.modal', function (event) {
+    var button = event.relatedTarget;
+
+    // Get values from button attributes
+    var id           = button.getAttribute('data-id');
+    var nom          = button.getAttribute('data-nom');
+    var zone         = button.getAttribute('data-zone');
+    var type_etab    = button.getAttribute('data-type');
+    var activites    = button.getAttribute('data-activites');
+    var ville        = button.getAttribute('data-ville');
+    var pays         = button.getAttribute('data-pays');
+    var email        = button.getAttribute('data-email');
+    var telephone    = button.getAttribute('data-telephone');
+
+    // Fill modal fields
+    document.getElementById('modalNom').textContent        = nom;
+    document.getElementById('modalZone').textContent       = zone;
+    document.getElementById('modalType').textContent       = type_etab;
+    document.getElementById('modalActivites').textContent  = activites;
+    document.getElementById('modalVille').textContent      = ville;
+    document.getElementById('modalPays').textContent       = pays;
+    document.getElementById('modalEmail').textContent      = email;
+    document.getElementById('modalTelephone').textContent  = telephone;
+
+    // Edit button redirect
+    var editBtn = viewSiteModal.querySelector('#editSiteBtn');
+    editBtn.onclick = function () {
+        window.location.href = `/site_add?id=${id}`;
+    };
+});
+});
+</script>
+
+<!-- ExcelJS for styled Excel export -->
+<script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+<script>
+document.getElementById("exportBtn").addEventListener("click", async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Sites");
+
+    // Grab table
+    const table = document.querySelector("#sitesForm table");
+
+    // ===== Headers =====
+    const headers = [];
+    table.querySelectorAll("thead th").forEach((th, index) => {
+        if(index !== 0 && index !== table.querySelectorAll("thead th").length - 1){ 
+            headers.push(th.textContent.trim());
+        }
     });
+
+    const headerRow = worksheet.addRow(headers);
+
+    // Style header row (blue background, white bold text, centered)
+    headerRow.eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "0070C0" }
+        };
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+        cell.border = {
+            top: { style: "thin", color: { argb: "000000" } },
+            left: { style: "thin", color: { argb: "000000" } },
+            bottom: { style: "thin", color: { argb: "000000" } },
+            right: { style: "thin", color: { argb: "000000" } }
+        };
+    });
+
+    // ===== Data Rows =====
+    table.querySelectorAll("tbody tr").forEach(tr => {
+        if(tr.style.display !== "none"){
+            const rowData = [];
+            tr.querySelectorAll("td").forEach((td, index) => {
+                if(index !== 0 && index !== tr.querySelectorAll("td").length - 1){
+                    rowData.push(td.textContent.trim());
+                }
+            });
+            worksheet.addRow(rowData);
+        }
+    });
+
+    // ===== Auto column width =====
+    worksheet.columns.forEach(column => {
+        let maxLength = 0;
+        column.eachCell({ includeEmpty: true }, cell => {
+            const value = cell.value ? cell.value.toString() : "";
+            maxLength = Math.max(maxLength, value.length);
+        });
+        column.width = maxLength < 12 ? 12 : maxLength + 2;
+    });
+
+    // ===== Export File =====
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/octet-stream" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "sites.xlsx";
+    link.click();
 });
 </script>
 {% endblock %}

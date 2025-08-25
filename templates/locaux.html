@@ -1,37 +1,61 @@
 {% extends "base.html" %}
 {% block title %}Locaux{% endblock %}
 
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='clients.css') }}">
+<style>
+    .mui-table th, .mui-table td {
+        vertical-align: middle;
+        text-align: center;
+    }
+    .mui-table th {
+        background-color: #f5f5f5;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <!-- Header with title + buttons -->
+    <div class="page-header d-flex justify-content-between align-items-center mb-3">
         <h2 class="h4">Locaux</h2>
         <div>
-      <a href="{{ url_for('locaux_add') }}" class="btn btn-primary me-2">
-        <i class="fas fa-plus-circle me-1"></i> Ajouter
-      </a>
-        <button id="bulkDeleteBtn" class="btn btn-danger" disabled>
-       <i class="fas fa-trash me-1"></i> Supprimer
-      </button>
-      
-    </div>
+            <a href="javascript:void(0)" id="exportBtn" class="btn btn-success me-2">
+    <i class="fas fa-file-excel me-1"></i> Export Excel
+</a>
+            <a href="{{ url_for('locaux_add') }}" class="btn btn-primary me-2">
+                <i class="fas fa-plus-circle me-1"></i> Ajouter
+            </a>
+            <button id="bulkDeleteBtn" class="btn btn-danger" disabled>
+                <i class="fas fa-trash me-1"></i> Supprimer
+            </button>
+        </div>
     </div>
 
+    <!-- Table card -->
     <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-building me-2"></i>Locaux Directory</h5>
+        </div>
         <div class="card-body p-0">
-            <form id="locauxForm" method="POST">
+            <form id="locauxForm" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="table-responsive">
-                    <table class="table table-hover table-striped align-middle">
+                    <table class="table table-hover mui-table">
                         <thead>
                             <tr>
-                                <th><input type="checkbox" id="selectAll"></th>
+                                <th>
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input type="checkbox" id="selectAll" class="form-check-input">
+                                    </div>
+                                </th>
                                 <th>Zone</th>
                                 <th>Site</th>
                                 <th>Bâtiment</th>
                                 <th>Etage</th>
                                 <th>Nom</th>
                                 <th>Code</th>
-                                <!--<th>Tag RFID</th>-->
                                 <th>Commentaires</th>
                                 <th>Dernier inventaire</th>
                                 <th>Actions</th>
@@ -40,27 +64,30 @@
                         <tbody>
                             {% for l in locaux_list %}
                             <tr>
-                                <td><input type="checkbox" class="row-checkbox" name="locaux_ids" value="{{ l.id }}"></td>
+                                <td>
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input type="checkbox" class="form-check-input row-checkbox" name="locaux_ids" value="{{ l.id }}">
+                                    </div>
+                                </td>
                                 <td>{{ l.zone.nom }}</td>
                                 <td>{{ l.site.nom }}</td>
                                 <td>{{ l.batiment }}</td>
                                 <td>{{ l.etage }}</td>
                                 <td>{{ l.nom }}</td>
                                 <td>{{ l.code }}</td>
-                                <!--<td>{{ l.tag_rfid }}</td>-->
                                 <td>{{ l.commentaires }}</td>
                                 <td>{{ l.dernier_inventaire if l.dernier_inventaire else '-' }}</td>
                                 <td>
-                                    <div class="d-flex gap-1">
+                                    <div class="d-flex gap-1 justify-content-center">
                                         <button type="button" class="btn btn-sm btn-outline-info"
                                             data-bs-toggle="modal" data-bs-target="#viewLocauxModal"
+                                            data-id="{{ l.id }}"
                                             data-zone="{{ l.zone.nom }}"
                                             data-site="{{ l.site.nom }}"
                                             data-batiment="{{ l.batiment }}"
                                             data-etage="{{ l.etage }}"
                                             data-nom="{{ l.nom }}"
                                             data-code="{{ l.code }}"
-                                            
                                             data-commentaires="{{ l.commentaires }}"
                                             data-dernier="{{ l.dernier_inventaire if l.dernier_inventaire else '-' }}"
                                             title="View">
@@ -69,13 +96,16 @@
                                         <a href="{{ url_for('locaux_add', id=l.id) }}" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        
                                     </div>
                                 </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="11" class="text-center p-4">No Locaux Found</td>
+                                <td colspan="10" class="text-center p-4">
+                                    <i class="fas fa-building fa-2x text-muted"></i>
+                                    <h5 class="mt-2">No Locaux Found</h5>
+                                    <p>Click "Add Locaux" to create one</p>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -85,31 +115,38 @@
         </div>
     </div>
 </div>
+
+<!-- View Locaux Modal -->
 <div class="modal fade" id="viewLocauxModal" tabindex="-1" aria-labelledby="viewLocauxModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="viewLocauxModalLabel">Locaux Details</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <p><strong>Zone:</strong> <span id="modalZone"></span></p>
-        <p><strong>Site:</strong> <span id="modalSite"></span></p>
-        <p><strong>Bâtiment:</strong> <span id="modalBatiment"></span></p>
-        <p><strong>Etage:</strong> <span id="modalEtage"></span></p>
-        <p><strong>Nom:</strong> <span id="modalNom"></span></p>
-        <p><strong>Code:</strong> <span id="modalCode"></span></p>
-        <!--<p><strong>Tag RFID:</strong> <span id="modalTag"></span></p>-->
-        <p><strong>Commentaires:</strong> <span id="modalCommentaires"></span></p>
-        <p><strong>Dernier inventaire:</strong> <span id="modalDernier"></span></p>
+        <ul class="list-group">
+          <li class="list-group-item"><strong>Zone:</strong> <span id="modalZone"></span></li>
+          <li class="list-group-item"><strong>Site:</strong> <span id="modalSite"></span></li>
+          <li class="list-group-item"><strong>Bâtiment:</strong> <span id="modalBatiment"></span></li>
+          <li class="list-group-item"><strong>Etage:</strong> <span id="modalEtage"></span></li>
+          <li class="list-group-item"><strong>Nom:</strong> <span id="modalNom"></span></li>
+          <li class="list-group-item"><strong>Code:</strong> <span id="modalCode"></span></li>
+          <li class="list-group-item"><strong>Commentaires:</strong> <span id="modalCommentaires"></span></li>
+          <li class="list-group-item"><strong>Dernier inventaire:</strong> <span id="modalDernier"></span></li>
+        </ul>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <a id="editLocauxBtn"  href="#" class="btn btn-primary">Modifier</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
       </div>
     </div>
   </div>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     const selectAll = document.getElementById("selectAll");
@@ -117,56 +154,116 @@ document.addEventListener("DOMContentLoaded", () => {
     const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
     const form = document.getElementById("locauxForm");
 
-    selectAll.addEventListener("change", () => {
-        rowCheckboxes.forEach(cb => cb.checked = selectAll.checked);
-        bulkDeleteBtn.disabled = !selectAll.checked;
-    });
-
-    rowCheckboxes.forEach(cb => cb.addEventListener("change", () => {
+    function updateSelectAll() {
+        const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
         const anyChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+        selectAll.checked = allChecked;
         bulkDeleteBtn.disabled = !anyChecked;
-    }));
-
-    bulkDeleteBtn.addEventListener("click", () => {
-        if(confirm("Delete selected locaux?")) form.submit();
-    });
-});
-</script>
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-    const selectAll = document.getElementById("selectAll");
-    const rowCheckboxes = document.querySelectorAll(".row-checkbox");
-    const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
-    const form = document.getElementById("locauxForm");
+    }
 
     selectAll.addEventListener("change", () => {
         rowCheckboxes.forEach(cb => cb.checked = selectAll.checked);
         bulkDeleteBtn.disabled = !selectAll.checked;
     });
 
-    rowCheckboxes.forEach(cb => cb.addEventListener("change", () => {
-        const anyChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
-        bulkDeleteBtn.disabled = !anyChecked;
-    }));
+    rowCheckboxes.forEach(cb => cb.addEventListener("change", updateSelectAll));
 
     bulkDeleteBtn.addEventListener("click", () => {
-        if(confirm("Delete selected locaux?")) form.submit();
+        if(confirm("Are you sure you want to delete selected locaux?")) {
+            form.action = "{{ url_for('locaux_bulk_delete') }}";
+            form.submit();
+        }
     });
 
-    // Eye icon modal
-    var viewLocauxModal = document.getElementById('viewLocauxModal');
+    // Modal population
+    const viewLocauxModal = document.getElementById('viewLocauxModal');
     viewLocauxModal.addEventListener('show.bs.modal', function (event) {
-      var button = event.relatedTarget;
+      const button = event.relatedTarget;
+      const id = button.getAttribute('data-id');
       document.getElementById('modalZone').textContent = button.getAttribute('data-zone');
       document.getElementById('modalSite').textContent = button.getAttribute('data-site');
       document.getElementById('modalBatiment').textContent = button.getAttribute('data-batiment');
       document.getElementById('modalEtage').textContent = button.getAttribute('data-etage');
       document.getElementById('modalNom').textContent = button.getAttribute('data-nom');
       document.getElementById('modalCode').textContent = button.getAttribute('data-code');
-      document.getElementById('modalTag').textContent = button.getAttribute('data-tag');
       document.getElementById('modalCommentaires').textContent = button.getAttribute('data-commentaires');
       document.getElementById('modalDernier').textContent = button.getAttribute('data-dernier');
+
+      const editBtn = viewLocauxModal.querySelector('#editLocauxBtn');
+      editBtn.onclick = function () {
+        window.location.href = `/locaux_add?id=${button.getAttribute('data-id')}`;
+      }
     });
+});
+</script>
+
+<!-- ExcelJS for styled Excel export -->
+<script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+<script>
+document.getElementById("exportBtn").addEventListener("click", async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Locaux");
+
+    // Grab table
+    const table = document.querySelector("#locauxForm table");
+
+    // ===== Headers =====
+    const headers = [];
+    table.querySelectorAll("thead th").forEach((th, index) => {
+        if(index !== 0 && index !== table.querySelectorAll("thead th").length - 1){ 
+            headers.push(th.textContent.trim());
+        }
+    });
+
+    const headerRow = worksheet.addRow(headers);
+
+    // Style header row (blue background, white bold text, centered)
+    headerRow.eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "0070C0" }
+        };
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+        cell.border = {
+            top: { style: "thin", color: { argb: "000000" } },
+            left: { style: "thin", color: { argb: "000000" } },
+            bottom: { style: "thin", color: { argb: "000000" } },
+            right: { style: "thin", color: { argb: "000000" } }
+        };
+    });
+
+    // ===== Data Rows =====
+    table.querySelectorAll("tbody tr").forEach(tr => {
+        if(tr.style.display !== "none"){
+            const rowData = [];
+            tr.querySelectorAll("td").forEach((td, index) => {
+                if(index !== 0 && index !== tr.querySelectorAll("td").length - 1){
+                    rowData.push(td.textContent.trim());
+                }
+            });
+            worksheet.addRow(rowData);
+        }
+    });
+
+    // ===== Auto column width =====
+    worksheet.columns.forEach(column => {
+        let maxLength = 0;
+        column.eachCell({ includeEmpty: true }, cell => {
+            const value = cell.value ? cell.value.toString() : "";
+            maxLength = Math.max(maxLength, value.length);
+        });
+        column.width = maxLength < 12 ? 12 : maxLength + 2;
+    });
+
+    // ===== Export File =====
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/octet-stream" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "locaux.xlsx";
+    link.click();
 });
 </script>
 {% endblock %}

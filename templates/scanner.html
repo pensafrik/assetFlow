@@ -18,7 +18,7 @@
 {% block content %}
 <div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="mb-0">📱 Scanner</h1>
+    <h1 class="mb-0">Scanner</h1>
   </div>
 
   <!-- QR/Barcode Scanner -->
@@ -221,9 +221,11 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  // ------- Elements (all by ID so they exist) -------
+  // ------- Elements -------
   const zoneSelect        = document.getElementById("zoneSelect");
   const siteSelect        = document.getElementById("siteSelect");
   const localSelect       = document.getElementById("localSelect");
@@ -234,13 +236,19 @@ document.addEventListener("DOMContentLoaded", function () {
   const resultBox         = document.getElementById("resultBox");
   const btnStartQR        = document.getElementById("btnStartQR");
 
+  const designationInput  = document.querySelector("[name='designation']");
+  const serialInput       = document.querySelector("[name='serial_number']");
+  const marqueInput       = document.getElementById("marqueInput");
+  const modeleInput       = document.getElementById("modeleInput");
+  const statutSelect      = document.getElementById("statutSelect");
+  const affecteSelect     = document.getElementById("affecteSelect");
+
   // Sous-familles data from Flask
   const sousFamilles = {{ sous_familles | tojson | safe }};
 
   // -------- Helpers --------
   function slugUpper(text) {
     if (!text) return "";
-    // remove accents, keep letters/numbers, replace spaces with nothing, uppercase
     return text.normalize("NFD")
                .replace(/[\u0300-\u036f]/g, "")
                .replace(/[^A-Za-z0-9]/g, "")
@@ -260,17 +268,16 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function getFamilleCode() {
-    if (!familleSelect) return "";
     const opt = familleSelect.options[familleSelect.selectedIndex];
-    return opt ? (opt.dataset.code || "").toUpperCase() : "";
+    return opt?.dataset.code?.toUpperCase() || "FAM";
   }
 
- function generateMatriculeFromSelections() {
-  const zoneName    = slugUpper(getSelectedText(zoneSelect)) || "ZONE";
-  const familleCode = getFamilleCode() || "FAM";
-  const digits      = randomDigits(8);
-  return `${zoneName}-${familleCode}${digits}`;
-}
+  function generateMatriculeFromSelections() {
+    const zoneName    = slugUpper(getSelectedText(zoneSelect)) || "ZONE";
+    const familleCode = getFamilleCode();
+    const digits      = randomDigits(8);
+    return `${zoneName}-${familleCode}${digits}`;
+  }
 
   function updateSousFamilleOptions() {
     if (!familleSelect || !sousFamilleSelect) return;
@@ -287,21 +294,18 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // ------- Wire up dependent selects -------
-  if (familleSelect) {
-    familleSelect.addEventListener("change", () => {
-      updateSousFamilleOptions();
-      if (matriculeInput) matriculeInput.value = generateMatriculeFromSelections();
-    });
-  }
-  if (zoneSelect) {
-    zoneSelect.addEventListener("change", () => {
-      if (matriculeInput) matriculeInput.value = generateMatriculeFromSelections();
-    });
-  }
+  familleSelect.addEventListener("change", () => {
+    updateSousFamilleOptions();
+    matriculeInput.value = generateMatriculeFromSelections();
+  });
 
-  // Initialize sous-familles on load (and set matricule if empty)
+  zoneSelect.addEventListener("change", () => {
+    matriculeInput.value = generateMatriculeFromSelections();
+  });
+
+  // Initialize sous-familles on load
   updateSousFamilleOptions();
-  if (matriculeInput && !matriculeInput.value) {
+  if (!matriculeInput.value) {
     matriculeInput.value = generateMatriculeFromSelections();
   }
 
@@ -309,39 +313,55 @@ document.addEventListener("DOMContentLoaded", function () {
   let html5QrCode = null;
 
   function onScanSuccess(decodedText) {
-    if (resultBox) resultBox.textContent = "Scanned: " + decodedText;
+    resultBox.textContent = "Scanned: " + decodedText;
 
-    // fill hidden QR fields you already have
     const qrDisplay = document.getElementById("qrDisplay");
     const qrInput   = document.getElementById("qrInput");
     if (qrDisplay) qrDisplay.innerText = decodedText;
     if (qrInput)   qrInput.value       = decodedText;
     if (barcodeInput) barcodeInput.value = decodedText;
 
-    // Fetch and populate article fields from your endpoint
+    // Fetch article data
     fetch(`/article/get/${encodeURIComponent(decodedText)}`)
       .then(r => r.json())
       .then(data => {
         if (data && !data.message) {
+          // Pre-fill all fields from DB
           if (siteSelect)        siteSelect.value        = data.site_id || "";
+          if (zoneSelect)        zoneSelect.value        = data.zone_id || "";
+          if (localSelect)       localSelect.value       = data.local_id || "";
           if (familleSelect)     familleSelect.value     = data.famille_id || "";
           updateSousFamilleOptions();
           if (sousFamilleSelect) sousFamilleSelect.value = data.sous_famille_id || "";
-          if (matriculeInput)    matriculeInput.value    = data.matricule || generateMatriculeFromSelections();
+
+          if (designationInput) designationInput.value   = data.designation || "";
+          if (serialInput)      serialInput.value        = data.serial_number || "";
+          if (marqueInput)      marqueInput.value        = data.marque || "";
+          if (modeleInput)      modeleInput.value        = data.modele || "";
+          if (statutSelect)     statutSelect.value       = data.statut || "";
+          if (affecteSelect) {
+    console.log("affecte_a from backend:", data.affecte_a);
+    affecteSelect.value = data.affecte_a || "";
+    if (![...affecteSelect.options].some(opt => opt.value === data.affecte_a)) {
+        affecteSelect.value = "";
+      }
+      }    
+
+          matriculeInput.value = data.matricule || generateMatriculeFromSelections();
         } else {
-          if (matriculeInput) matriculeInput.value = generateMatriculeFromSelections();
+          // New article → generate a fresh matricule
+          matriculeInput.value = generateMatriculeFromSelections();
         }
       })
       .catch(() => {
-        if (matriculeInput) matriculeInput.value = generateMatriculeFromSelections();
+        matriculeInput.value = generateMatriculeFromSelections();
       })
       .finally(() => {
-        // Stop after a successful scan
         if (html5QrCode) {
           html5QrCode.stop().then(() => {
             html5QrCode.clear();
             html5QrCode = null;
-            if (btnStartQR) btnStartQR.textContent = "Start Scan";
+            btnStartQR.textContent = "Start Scan";
           });
         }
       });
@@ -349,32 +369,30 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function onScanError(_) { /* ignore */ }
 
-  if (btnStartQR) {
-    btnStartQR.addEventListener("click", function () {
-      if (html5QrCode) {
-        html5QrCode.stop().then(() => {
-          html5QrCode.clear();
-          html5QrCode = null;
-          btnStartQR.textContent = "Start Scan";
-        });
-      } else {
-        html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: 250 },
-          onScanSuccess,
-          onScanError
-        ).then(() => {
-          btnStartQR.textContent = "Stop Scan";
-        }).catch(err => {
-          console.error(err);
-          btnStartQR.textContent = "Start Scan";
-        });
-      }
-    });
-  }
+  btnStartQR.addEventListener("click", function () {
+    if (html5QrCode) {
+      html5QrCode.stop().then(() => {
+        html5QrCode.clear();
+        html5QrCode = null;
+        btnStartQR.textContent = "Start Scan";
+      });
+    } else {
+      html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        onScanSuccess,
+        onScanError
+      ).then(() => {
+        btnStartQR.textContent = "Stop Scan";
+      }).catch(err => {
+        console.error(err);
+        btnStartQR.textContent = "Start Scan";
+      });
+    }
+  });
 
-  // ------- (Optional) Enhance "Affecté à" with Select2 -------
+  // ------- Enhance "Affecté à" with Select2 -------
   if (window.jQuery && $('#affecteSelect').length) {
     $('#affecteSelect').select2({ placeholder: "Select Salarié", allowClear: true, width: '100%' });
   }

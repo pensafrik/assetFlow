@@ -9,7 +9,7 @@
     <!-- Logo -->
     <a class="navbar-brand px-3 mb-4 d-flex align-items-center" href="{{ url_for('articles_list') }}">
       <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" style="height: 50px;" class="img-fluid">
-      <span class="ms-2 fw-bold">Kliiev</span>
+      <span class="ms-2 fw-bold">AssetFlow</span>
     </a>
 
     <!-- Menu -->
@@ -24,21 +24,21 @@
       <li class="nav-item mb-1">
         <a class="nav-link px-3 py-2 text-dark d-flex align-items-center" href="{{ url_for('famille_list') }}">
           <i class="bi bi-box-seam me-2"></i>
-          <span class="menu-text">Famille</span>
+          <span class="menu-text">Familles</span>
         </a>
       </li>
 
       <li class="nav-item mb-1">
         <a class="nav-link px-3 py-2 text-dark d-flex align-items-center" href="{{ url_for('sous_famille_list') }}">
           <i class="bi bi-boxes me-2"></i>
-          <span class="menu-text">Sous Famille</span>
+          <span class="menu-text">Sous-familles</span>
         </a>
       </li>
 
       <li class="nav-item mb-1">
   <a class="nav-link px-3 py-2 text-dark d-flex align-items-center" href="{{ url_for('liste_salaries') }}">
     <i class="bi bi-person-lines-fill me-2"></i>
-    <span class="menu-text">Liste des Salariés</span>
+    <span class="menu-text">Liste des salariés</span>
   </a>
 </li>
 
@@ -57,13 +57,13 @@
         <div class="collapse" id="localisationMenu" data-bs-parent="#sidebarMenu">
           <ul class="nav flex-column ms-3">
             <li class="nav-item">
-              <a class="nav-link px-3 py-2 text-dark" href="{{ url_for('zones_list') }}">Zones</a>
+              <a class="nav-link px-3 py-2 text-dark" href="{{ url_for('zones_list') }}">Société</a>
             </li>
             <li class="nav-item">
               <a class="nav-link px-3 py-2 text-dark" href="{{ url_for('sites') }}">Sites</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link px-3 py-2 text-dark" href="{{ url_for('locaux') }}">Locaux</a>
+              <a class="nav-link px-3 py-2 text-dark" href="{{ url_for('locaux') }}">Emplacements</a>
             </li>
           </ul>
         </div>
@@ -79,8 +79,8 @@
 
     <!-- Footer -->
     <div class="mt-auto px-3 mb-3">
-      <span class="d-block mb-2">Welcome, {{ current_user.username }}</span>
-      <a class="btn btn-outline-danger w-100" href="{{ url_for('logout') }}">Logout</a>
+      <!--<span class="d-block mb-2">Bienvenue, {{ current_user.username }}</span>-->
+      <a class="btn btn-outline-danger w-100" href="{{ url_for('logout') }}">Quitter</a>
     </div>
   </div>
 </nav>
