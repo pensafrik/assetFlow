@@ -1,0 +1,164 @@
+:root {
+    --primary-color: #4e73df;
+    --secondary-color: #f8f9fc;
+    --hover-color: #f1f3f9;
+    --border-color: #e3e6f0;
+    --text-muted: #6c757d;
+}
+
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Page header */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+/* Card polish */
+.card.shadow-sm {
+    border: 0;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(32, 40, 60, 0.07);
+}
+
+/* Table header gradient */
+.table thead th {
+    background: linear-gradient(90deg, rgba(78,115,223,1) 0%, rgba(0,123,255,1) 100%);
+    color: #fff;
+    border: none;
+    vertical-align: middle;
+    font-weight: 600;
+}
+
+/* Hover */
+.table tbody tr:hover {
+    background-color: rgba(78,115,223,0.03);
+}
+
+/* Buttons */
+.action-btns .btn {
+    min-width: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 8px;
+    border-radius: 8px;
+}
+
+/* Plain text inputs style */
+.form-control-plaintext {
+    background: transparent;
+    border: none;
+    padding: .375rem .75rem;
+    color: #212529;
+}
+
+/* Copy button */
+.copy-btn {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    border: none;
+    background: transparent;
+    color: #6c757d;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.copy-btn:hover { color: var(--primary-color); }
+
+/* Misc spacing */
+.table td, .table th {
+    vertical-align: middle;
+}
+
+/* Make password input smaller and inline with icon */
+.password-container {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px; /* small space between field and icon */
+    white-space: nowrap;
+}
+
+.password-container .password-field {
+    width: 90px; /* compact width */
+    padding: 3px 5px;
+    font-size: 0.85rem;
+    line-height: 1;
+}
+
+/* Make the eye button smaller */
+.password-container .btn-action {
+    padding: 3px 5px;
+    font-size: 0.75rem;
+    line-height: 1;
+}
+
+/* Keep table rows compact */
+.table td, 
+.table th {
+    vertical-align: middle;
+    padding: 6px 8px;
+}
+
+/* Action buttons inline & small */
+.action-buttons {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.action-buttons .btn-action {
+    padding: 3px 5px;
+    font-size: 0.75rem; /* smaller icons */
+    border-radius: 5px;
+    line-height: 1;
+}
+
+
+.action-buttons {
+    display: flex;
+    gap: 0.3rem; /* space between buttons */
+    align-items: center; /* vertical center */
+}
+
+.action-buttons form {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.3rem;          /* space between buttons */
+    align-items: center;  /* vertical center */
+}
+
+.action-buttons form {
+    margin: 0;
+    display: flex;        /* flex instead of inline-flex */
+    align-items: center;  /* vertical center */
+}
+
+.action-buttons form button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0.5rem;  /* consistent padding */
+    height: 32px;             /* match btn-sm height */
+}
+
+.action-buttons a.btn, 
+.action-buttons form button.btn {
+    height: 32px;        /* same height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+

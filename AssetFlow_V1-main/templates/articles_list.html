@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+
+{% block title %}Articles{% endblock %}
+
+{% block styles %}
+<style>
+  .mui-table th, .mui-table td { vertical-align: middle; text-align: center; }
+  .mui-table th { background-color: #f5f5f5; font-weight: 600; }
+  .asset-img { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 mb-0"></h2>
+    <div>
+      <button id="exportBtn" class="btn btn-success">
+        <i class="fas fa-file-excel me-1"></i> Exporter
+      </button>
+      <a href="{{ url_for('article_add_edit') }}" class="btn btn-primary me-2">
+        <i class="fas fa-plus-circle me-1"></i> Ajouter
+      </a>
+      <button id="bulkDeleteBtn" class="btn btn-danger" disabled>
+        <i class="fas fa-trash me-1"></i> Supprimer
+      </button>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0"><i class="fas fa-boxes me-2"></i>Liste des articles</h5>
+    </div>
+    <div class="card-body p-0">
+      <form id="articlesForm" method="POST" action="{{ url_for('bulk_delete_articles') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-3">
+          <input type="text" id="articleSearch" class="form-control" placeholder="Recherche...">
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover mui-table mb-0">
+            <thead>
+              <tr>
+                <th><div class="form-check d-flex justify-content-center">
+                  <input class="form-check-input" type="checkbox" id="selectAll">
+                </div></th>
+                <th>Matricule</th>
+                <th>Société</th>
+                <th>Site</th>
+                <th>Emplacement</th>
+                <th>Affectation</th>
+                <th>Code-barre</th>
+                <th>Famille</th>
+                <th style="display:none;">Sous-famille</th>
+                <th>Désignation</th>
+                <th>Numéro de série</th>
+                <th style="display:none;">Marque</th>
+                <th style="display:none;">Modèle</th>
+                <th style="display:none;">Etat</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for article in articles %}
+              <tr>
+                <td>
+                  <div class="form-check d-flex justify-content-center">
+                    <input class="form-check-input row-checkbox" type="checkbox" name="article_ids" value="{{ article.id }}">
+                  </div>
+                </td>
+                <td>{{ article.matricule }}</td>
+                <td>{{ article.zone.nom if article.zone else '' }}</td>
+                <td>{{ article.site.nom if article.site else '' }}</td>
+                <td>{{ article.local.nom if article.local else '' }}</td>
+                <td>{{ article.affecte_a }}</td>
+                <td>{{ article.qr_code }}</td>
+                <td>{{ article.famille.nom if article.famille else '' }}</td>
+                <td style="display:none;">{{ article.sous_famille.nom if article.sous_famille else '' }}</td>
+                <td>{{ article.designation }}</td>
+                <td>{{ article.serial_number }}</td>
+                <td style="display:none;">{{ article.marque }}</td>
+                <td style="display:none;">{{ article.modele }}</td>
+                <td style="display:none;">{{ article.statut }}</td>
+                <td>
+                  <div class="d-flex gap-1 justify-content-center">
+                    <!-- VIEW BUTTON -->
+                    <button type="button" class="btn btn-sm btn-outline-info view-article-btn"
+                      data-bs-toggle="modal" data-bs-target="#viewArticleModal"
+                      data-id="{{ article.id }}"
+                      data-matricule="{{ article.matricule }}"
+                      data-zone="{{ article.zone.nom if article.zone else '' }}"
+                      data-site="{{ article.site.nom if article.site else '' }}"
+                      data-local="{{ article.local.nom if article.local else '' }}"
+                      data-affecte="{{ article.affecte_a }}"
+                      data-qr="{{ article.qr_code }}"
+                      data-famille="{{ article.famille.nom if article.famille else '' }}"
+                      data-sousfamille="{{ article.sous_famille.nom if article.sous_famille else '' }}"
+                      data-designation="{{ article.designation }}"
+                      data-serial="{{ article.serial_number }}"
+                      data-marque="{{ article.marque }}"
+                      data-modele="{{ article.modele }}"
+                      data-statut="{{ article.statut }}"
+                      title="Visualiser">
+                      <i class="fas fa-eye"></i>
+                    </button>
+
+                    <!-- EDIT BUTTON -->
+                    <a href="{{ url_for('article_add_edit', id=article.id) }}" class="btn btn-sm btn-outline-primary" title="Modifier">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="15" class="text-center p-4">
+                  <i class="fas fa-box-open fa-2x text-muted"></i>
+                  <h5 class="mt-2">Aucun article trouvé</h5>
+                  <p>Clicker "Ajouter" pour ajouter un article</p>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW ARTICLE MODAL -->
+<div class="modal fade" id="viewArticleModal" tabindex="-1" aria-labelledby="viewArticleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewArticleModalLabel">Détail</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body row g-3">
+        <div class="col-md-8">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item"><strong>Matricule :</strong> <span id="modalMatricule"></span></li>
+            <li class="list-group-item"><strong>Société :</strong> <span id="modalZone"></span></li>
+            <li class="list-group-item"><strong>Site :</strong> <span id="modalSite"></span></li>
+            <li class="list-group-item"><strong>Emplacement :</strong> <span id="modalLocal"></span></li>
+            <li class="list-group-item"><strong>Affectation :</strong> <span id="modalAffecte"></span></li>
+            <li class="list-group-item"><strong>Code-barre :</strong> <span id="modalQR"></span></li>
+            <li class="list-group-item"><strong>Famille :</strong> <span id="modalFamille"></span></li>
+            <li class="list-group-item"><strong>Sous-famille :</strong> <span id="modalSousFamille"></span></li>
+            <li class="list-group-item"><strong>Désignation :</strong> <span id="modalDesignation"></span></li>
+            <li class="list-group-item"><strong>Numéro de série :</strong> <span id="modalSerial"></span></li>
+            <li class="list-group-item"><strong>Marque :</strong> <span id="modalMarque"></span></li>
+            <li class="list-group-item"><strong>Modèle :</strong> <span id="modalModele"></span></li>
+            <li class="list-group-item"><strong>Etat :</strong> <span id="modalStatut"></span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <!-- Dynamic Modifier button -->
+        <a id="modalEditBtn" href="#" class="btn btn-primary">Modifier</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const modal = document.getElementById('viewArticleModal');
+
+  modal.addEventListener('show.bs.modal', function (event) {
+    const button = event.relatedTarget;
+    const articleId = button.getAttribute('data-id');
+
+    modal.querySelector('#modalMatricule').textContent = button.getAttribute('data-matricule');
+    modal.querySelector('#modalZone').textContent = button.getAttribute('data-zone');
+    modal.querySelector('#modalSite').textContent = button.getAttribute('data-site');
+    modal.querySelector('#modalLocal').textContent = button.getAttribute('data-local');
+    modal.querySelector('#modalAffecte').textContent = button.getAttribute('data-affecte');
+    modal.querySelector('#modalQR').textContent = button.getAttribute('data-qr');
+    modal.querySelector('#modalFamille').textContent = button.getAttribute('data-famille');
+    modal.querySelector('#modalSousFamille').textContent = button.getAttribute('data-sousfamille');
+    modal.querySelector('#modalDesignation').textContent = button.getAttribute('data-designation');
+    modal.querySelector('#modalSerial').textContent = button.getAttribute('data-serial');
+    modal.querySelector('#modalMarque').textContent = button.getAttribute('data-marque');
+    modal.querySelector('#modalModele').textContent = button.getAttribute('data-modele');
+    modal.querySelector('#modalStatut').textContent = button.getAttribute('data-statut');
+
+    // Set dynamic edit URL
+    modal.querySelector('#modalEditBtn').href = `/articles/edit/${articleId}`;
+  });
+
+  // SEARCH
+  const searchInput = document.getElementById("articleSearch");
+  const table = document.querySelector("#articlesForm table tbody");
+  const rows = table.querySelectorAll("tr");
+
+  searchInput.addEventListener("keyup", () => {
+    const query = searchInput.value.toLowerCase();
+    rows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      row.style.display = text.includes(query) ? "" : "none";
+    });
+  });
+
+  // EXCEL EXPORT
+  document.getElementById("exportBtn").addEventListener("click", async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Articles");
+    const table = document.querySelector("#articlesForm table");
+
+    const headers = [];
+    table.querySelectorAll("thead th").forEach((th, index, arr) => {
+      if (index !== 0 && index !== arr.length - 1) headers.push(th.textContent.trim());
+    });
+
+    const headerRow = worksheet.addRow(headers);
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "0070C0" } };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.border = { top: { style: "thin", color: { argb: "000000" } }, left: { style: "thin", color: { argb: "000000" } }, bottom: { style: "thin", color: { argb: "000000" } }, right: { style: "thin", color: { argb: "000000" } } };
+    });
+
+    table.querySelectorAll("tbody tr").forEach(tr => {
+      if (tr.style.display !== "none") {
+        const rowData = [];
+        tr.querySelectorAll("td").forEach((td, index, arr) => {
+          if (index !== 0 && index !== arr.length - 1) rowData.push(td.textContent.trim());
+        });
+        worksheet.addRow(rowData);
+      }
+    });
+
+    worksheet.columns.forEach(col => {
+      let maxLength = 0;
+      col.eachCell({ includeEmpty: true }, cell => {
+        const val = cell.value ? cell.value.toString() : "";
+        maxLength = Math.max(maxLength, val.length);
+      });
+      col.width = maxLength < 12 ? 12 : maxLength + 2;
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/octet-stream" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "articles.xlsx";
+    link.click();
+  });
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+
+<!-- ExcelJS for styled Excel export -->
+<script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+<script>
+document.getElementById("exportBtn").addEventListener("click", async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Articles");
+
+    // Grab table
+    const table = document.querySelector("#articlesForm table");
+
+    // ===== Headers =====
+    const headers = [];
+    table.querySelectorAll("thead th").forEach((th, index) => {
+        if (index !== 0 && index !== table.querySelectorAll("thead th").length - 1) { 
+            headers.push(th.textContent.trim());
+        }
+    });
+
+    const headerRow = worksheet.addRow(headers);
+
+    // Style header row (blue background, white bold text, centered)
+    headerRow.eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "0070C0" }
+        };
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+        cell.border = {
+            top: { style: "thin", color: { argb: "000000" } },
+            left: { style: "thin", color: { argb: "000000" } },
+            bottom: { style: "thin", color: { argb: "000000" } },
+            right: { style: "thin", color: { argb: "000000" } }
+        };
+    });
+
+    // ===== Data Rows =====
+    table.querySelectorAll("tbody tr").forEach(tr => {
+        if (tr.style.display !== "none") {
+            const rowData = [];
+            tr.querySelectorAll("td").forEach((td, index) => {
+                if (index !== 0 && index !== tr.querySelectorAll("td").length - 1) { 
+                    rowData.push(td.textContent.trim());
+                }
+            });
+            worksheet.addRow(rowData);
+        }
+    });
+
+    // ===== Auto column width =====
+    worksheet.columns.forEach(column => {
+        let maxLength = 0;
+        column.eachCell({ includeEmpty: true }, cell => {
+            const value = cell.value ? cell.value.toString() : "";
+            maxLength = Math.max(maxLength, value.length);
+        });
+        column.width = maxLength < 12 ? 12 : maxLength + 2;
+    });
+
+    // ===== Export File =====
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/octet-stream" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "articles.xlsx";
+    link.click();
+});
+</script>
+
+{% endblock %}

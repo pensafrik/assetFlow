@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}{% if famille %}Modifier Famille{% else %}Ajouter Famille{% endif %}{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="page-header mb-3">
+        <!-- Optional header -->
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0">
+                {% if famille %}Modifier famille{% else %}Ajouter une famille{% endif %}
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="" class="row g-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="col-md-6">
+                    <label for="nom" class="form-label">Nom</label>
+                    <input type="text" class="form-control" id="nom" name="nom" placeholder="Entrez le nom de la famille" required value="{{ famille.nom if famille else '' }}">
+                </div>
+
+                <div class="col-md-6">
+                    <label for="code" class="form-label">Code</label>
+                    <input type="text" class="form-control" id="code" name="code" placeholder="Entrez le code" value="{{ famille.code if famille else '' }}">
+                </div>
+
+                <!--<div class="col-md-6">
+                    <label for="type" class="form-label">Type</label>
+                    <input type="text" class="form-control" id="type" name="type" placeholder="Entrez le type" value="{{ famille.type if famille else '' }}">
+                </div>
+
+                <div class="col-md-6">
+                    <label for="departement" class="form-label">Département</label>
+                    <input type="text" class="form-control" id="departement" name="departement" placeholder="Entrez le département" value="{{ famille.departement if famille else '' }}">
+                </div>-->
+
+                <div class="col-12">
+                    <label for="description" class="form-label">Commentaire</label>
+                    <textarea class="form-control" id="description" name="description" placeholder="Entrez un commentaire">{{ famille.description if famille else '' }}</textarea>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        {% if famille %}Mettre à jour{% else %}Ajouter{% endif %}
+                    </button>
+                    <a href="{{ url_for('famille_list') }}" class="btn btn-secondary">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
