@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Locaux{% endblock %}
+{% block title %}Emplacements{% endblock %}
 
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('static', filename='clients.css') }}">
@@ -18,25 +18,25 @@
 {% block content %}
 <div class="container-fluid">
     <!-- Header with title + buttons -->
-    <div class="page-header d-flex justify-content-between align-items-center mb-3">
-        <h2 class="h4">Locaux</h2>
-        <div>
+    <div class="page-header d-flex justify-content-end align-items-center mb-3">
+     
+        
             <a href="javascript:void(0)" id="exportBtn" class="btn btn-success me-2">
-    <i class="fas fa-file-excel me-1"></i> Export Excel
-</a>
+                <i class="fas fa-file-excel me-1"></i> Exporter 
+            </a>
             <a href="{{ url_for('locaux_add') }}" class="btn btn-primary me-2">
                 <i class="fas fa-plus-circle me-1"></i> Ajouter
             </a>
             <button id="bulkDeleteBtn" class="btn btn-danger" disabled>
                 <i class="fas fa-trash me-1"></i> Supprimer
             </button>
-        </div>
+        
     </div>
 
     <!-- Table card -->
     <div class="card">
         <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-building me-2"></i>Locaux Directory</h5>
+            <h5 class="mb-0"><i class="fas fa-building me-2"></i>Répertoire des Emplacements</h5>
         </div>
         <div class="card-body p-0">
             <form id="locauxForm" method="POST" enctype="multipart/form-data">
@@ -53,7 +53,7 @@
                                 <th>Zone</th>
                                 <th>Site</th>
                                 <th>Bâtiment</th>
-                                <th>Etage</th>
+                                <th>Étage</th>
                                 <th>Nom</th>
                                 <th>Code</th>
                                 <th>Commentaires</th>
@@ -90,10 +90,10 @@
                                             data-code="{{ l.code }}"
                                             data-commentaires="{{ l.commentaires }}"
                                             data-dernier="{{ l.dernier_inventaire if l.dernier_inventaire else '-' }}"
-                                            title="View">
+                                            title="Voir">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                        <a href="{{ url_for('locaux_add', id=l.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <a href="{{ url_for('locaux_add', id=l.id) }}" class="btn btn-sm btn-outline-primary" title="Modifier">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                     </div>
@@ -103,8 +103,8 @@
                             <tr>
                                 <td colspan="10" class="text-center p-4">
                                     <i class="fas fa-building fa-2x text-muted"></i>
-                                    <h5 class="mt-2">No Locaux Found</h5>
-                                    <p>Click "Add Locaux" to create one</p>
+                                    <h5 class="mt-2">Aucun emplacement trouvé</h5>
+                                    <p>Cliquez sur "Ajouter" pour créer un emplacement</p>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -116,34 +116,33 @@
     </div>
 </div>
 
-<!-- View Locaux Modal -->
+<!-- View Emplacement Modal -->
 <div class="modal fade" id="viewLocauxModal" tabindex="-1" aria-labelledby="viewLocauxModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="viewLocauxModalLabel">Locaux Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="viewLocauxModalLabel">Détails de l'emplacement</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
       </div>
       <div class="modal-body">
         <ul class="list-group">
-          <li class="list-group-item"><strong>Zone:</strong> <span id="modalZone"></span></li>
-          <li class="list-group-item"><strong>Site:</strong> <span id="modalSite"></span></li>
-          <li class="list-group-item"><strong>Bâtiment:</strong> <span id="modalBatiment"></span></li>
-          <li class="list-group-item"><strong>Etage:</strong> <span id="modalEtage"></span></li>
-          <li class="list-group-item"><strong>Nom:</strong> <span id="modalNom"></span></li>
-          <li class="list-group-item"><strong>Code:</strong> <span id="modalCode"></span></li>
-          <li class="list-group-item"><strong>Commentaires:</strong> <span id="modalCommentaires"></span></li>
-          <li class="list-group-item"><strong>Dernier inventaire:</strong> <span id="modalDernier"></span></li>
+          <li class="list-group-item"><strong>Zone :</strong> <span id="modalZone"></span></li>
+          <li class="list-group-item"><strong>Site :</strong> <span id="modalSite"></span></li>
+          <li class="list-group-item"><strong>Bâtiment :</strong> <span id="modalBatiment"></span></li>
+          <li class="list-group-item"><strong>Étage :</strong> <span id="modalEtage"></span></li>
+          <li class="list-group-item"><strong>Nom :</strong> <span id="modalNom"></span></li>
+          <li class="list-group-item"><strong>Code :</strong> <span id="modalCode"></span></li>
+          <li class="list-group-item"><strong>Commentaires :</strong> <span id="modalCommentaires"></span></li>
+          <li class="list-group-item"><strong>Dernier inventaire :</strong> <span id="modalDernier"></span></li>
         </ul>
       </div>
       <div class="modal-footer">
-        <a id="editLocauxBtn"  href="#" class="btn btn-primary">Modifier</a>
+        <a id="editLocauxBtn" href="#" class="btn btn-primary">Modifier</a>
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
       </div>
     </div>
   </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
@@ -169,7 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
     rowCheckboxes.forEach(cb => cb.addEventListener("change", updateSelectAll));
 
     bulkDeleteBtn.addEventListener("click", () => {
-        if(confirm("Are you sure you want to delete selected locaux?")) {
+        if(confirm("Êtes-vous sûr de vouloir supprimer les Emplacements?")) {
             form.action = "{{ url_for('locaux_bulk_delete') }}";
             form.submit();
         }

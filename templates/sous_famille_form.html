@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-{% if sous_famille %}Modifier Sous-famille{% else %}Ajouter{% endif %}
+{% if sous_famille %}Modifier la sous-famille{% else %}Ajouter une sous-famille{% endif %}
 {% endblock %}
 
 {% block styles %}
@@ -18,7 +18,7 @@
     <div class="card">
         <div class="card-header">
             <h5 class="mb-0">
-                {% if sous_famille %}Modifier sous-famille{% else %}Ajouter sous-famille{% endif %}
+                {% if sous_famille %}Modifier la sous-famille{% else %}Ajouter une sous-famille{% endif %}
             </h5>
         </div>
         <div class="card-body">
@@ -41,7 +41,7 @@
 
                     <div class="col-md-6">
                         <label class="form-label">Nom</label>
-                        <input type="text" name="nom" class="form-control" required
+                        <input type="text" name="nom" class="form-control" placeholder="Entrez le nom de la sous-famille" required
                                value="{{ sous_famille.nom if sous_famille else '' }}">
                     </div>
                 </div>
@@ -49,12 +49,12 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Code</label>
-                        <input type="text" name="code" class="form-control"
+                        <input type="text" name="code" class="form-control" placeholder="Entrez le code"
                                value="{{ sous_famille.code if sous_famille else '' }}">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Commentaire</label>
-                        <input type="text" name="commentaire" class="form-control"
+                        <input type="text" name="commentaire" class="form-control" placeholder="Entrez un commentaire"
                                value="{{ sous_famille.commentaire if sous_famille else '' }}">
                     </div>
                 </div>

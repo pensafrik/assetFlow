@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Zones{% endblock %}
+{% block title %}Société{% endblock %}
 
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('static', filename='clients.css') }}">
@@ -18,27 +18,25 @@
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Header with title + buttons -->
-    <div class="page-header d-flex justify-content-between align-items-center mb-3">
-        <h2 class="h4">Zone Management</h2>
-        <div>
+    <!-- Header avec titre + boutons -->
+    <div class="page-header d-flex justify-content-end align-items-center mb-3">
+        
             <a href="javascript:void(0)" id="exportBtn" class="btn btn-success me-2">
-    <i class="fas fa-file-excel me-1"></i> Export Excel
-</a>
-      <a href="{{ url_for('zone_add') }}" class="btn btn-primary me-2">
-        <i class="fas fa-plus-circle me-1"></i> Ajouter
-      </a>
-        <button id="bulkDeleteBtn" class="btn btn-danger" disabled>
-       <i class="fas fa-trash me-1"></i> Supprimer
-      </button>
-      
-    </div>
+                <i class="fas fa-file-excel me-1"></i> Exporter
+            </a>
+            <a href="{{ url_for('zone_add') }}" class="btn btn-primary me-2">
+                <i class="fas fa-plus-circle me-1"></i> Ajouter
+            </a>
+            <button id="bulkDeleteBtn" class="btn btn-danger" disabled>
+                <i class="fas fa-trash me-1"></i> Supprimer
+            </button>
+        
     </div>
 
-    <!-- Table card -->
+    <!-- Tableau des zones -->
     <div class="card">
         <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>Zones Directory</h5>
+            <h5 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>Liste des Sociétés</h5>
         </div>
         <div class="card-body p-0">
             <form id="zonesForm" method="POST" action="">
@@ -74,13 +72,12 @@
                                             data-id="{{ zone.id }}"
                                             data-nom="{{ zone.nom }}"
                                             data-pays="{{ zone.pays }}"
-                                            title="View">
+                                            title="Voir">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                        <a href="{{ url_for('zone_edit', id=zone.id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                        <a href="{{ url_for('zone_edit', id=zone.id) }}" class="btn btn-sm btn-outline-primary" title="Modifier">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        
                                     </div>
                                 </td>
                             </tr>
@@ -88,8 +85,8 @@
                             <tr>
                                 <td colspan="4" class="text-center p-4">
                                     <i class="fas fa-map-marked-alt fa-2x text-muted"></i>
-                                    <h5 class="mt-2">No Zones Found</h5>
-                                    <p>Click "Add New Zone" to create one</p>
+                                    <h5 class="mt-2">Aucune société trouvée</h5>
+                                    <p>Cliquez sur "Ajouter" pour créer une nouvelle société</p>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -100,19 +97,21 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Voir Zone -->
 <div class="modal fade" id="viewZoneModal" tabindex="-1" aria-labelledby="viewZoneModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="viewZoneModalLabel">Zone Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="viewZoneModalLabel">Détail</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
       </div>
       <div class="modal-body">
-        <p><strong>Nom:</strong> <span id="modalNom"></span></p>
-        <p><strong>Pays:</strong> <span id="modalPays"></span></p>
+        <p><strong>Nom :</strong> <span id="modalNom"></span></p>
+        <p><strong>Pays :</strong> <span id="modalPays"></span></p>
       </div>
       <div class="modal-footer">
-        <a id="editZoneBtn"  href="#" class="btn btn-primary">Modifier</a>
+        <a id="editZoneBtn" href="#" class="btn btn-primary">Modifier</a>
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
       </div>
     </div>
@@ -143,77 +142,40 @@ document.addEventListener("DOMContentLoaded", () => {
     rowCheckboxes.forEach(cb => cb.addEventListener("change", updateSelectAll));
 
     bulkDeleteBtn.addEventListener("click", () => {
-        if(confirm("Are you sure you want to delete selected zones?")) {
-            form.action = "{{ url_for('bulk_delete_zones') }}";
-            form.submit();
-        }
-    });
-});
-</script>
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-    const selectAll = document.getElementById("selectAll");
-    const rowCheckboxes = document.querySelectorAll(".row-checkbox");
-    const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
-    const form = document.getElementById("zonesForm");
-
-    function updateSelectAll() {
-        const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
-        const anyChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
-        selectAll.checked = allChecked;
-        bulkDeleteBtn.disabled = !anyChecked;
-    }
-
-    selectAll.addEventListener("change", () => {
-        rowCheckboxes.forEach(cb => cb.checked = selectAll.checked);
-        bulkDeleteBtn.disabled = !selectAll.checked;
-    });
-
-    rowCheckboxes.forEach(cb => cb.addEventListener("change", updateSelectAll));
-
-    bulkDeleteBtn.addEventListener("click", () => {
-        if(confirm("Are you sure you want to delete selected zones?")) {
+        if(confirm("Voulez-vous vraiment supprimer les sociétés sélectionnées ?")) {
             form.action = "{{ url_for('bulk_delete_zones') }}";
             form.submit();
         }
     });
 
-    // Eye icon modal
-var viewZoneModal = document.getElementById('viewZoneModal')
-viewZoneModal.addEventListener('show.bs.modal', function (event) {
-    var button = event.relatedTarget
-    
-    // Get values from button attributes
-    var id   = button.getAttribute('data-id')
-    var nom  = button.getAttribute('data-nom')
-    var pays = button.getAttribute('data-pays')
+    // Modal Voir Zone
+    var viewZoneModal = document.getElementById('viewZoneModal');
+    viewZoneModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var id   = button.getAttribute('data-id');
+        var nom  = button.getAttribute('data-nom');
+        var pays = button.getAttribute('data-pays');
 
-    // Fill modal fields
-    var modalNom  = viewZoneModal.querySelector('#modalNom')
-    var modalPays = viewZoneModal.querySelector('#modalPays')
-    modalNom.textContent  = nom
-    modalPays.textContent = pays
+        viewZoneModal.querySelector('#modalNom').textContent  = nom;
+        viewZoneModal.querySelector('#modalPays').textContent = pays;
 
-    // Update Modifier button with correct id
-    var editBtn = viewZoneModal.querySelector('#editZoneBtn')
-    editBtn.onclick = function () {
-        window.location.href = `/zones/edit/${id}`;  // 
-    }
-})
+        var editBtn = viewZoneModal.querySelector('#editZoneBtn');
+        editBtn.onclick = function () {
+            window.location.href = `/zones/edit/${id}`;
+        }
+    });
 });
 </script>
 
-<!-- ExcelJS for styled Excel export -->
+<!-- ExcelJS pour export Excel -->
 <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
 <script>
 document.getElementById("exportBtn").addEventListener("click", async () => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Zones");
 
-    // Grab table
     const table = document.querySelector("#zonesForm table");
 
-    // ===== Headers =====
     const headers = [];
     table.querySelectorAll("thead th").forEach((th, index) => {
         if(index !== 0 && index !== table.querySelectorAll("thead th").length - 1){ 
@@ -222,15 +184,9 @@ document.getElementById("exportBtn").addEventListener("click", async () => {
     });
 
     const headerRow = worksheet.addRow(headers);
-
-    // Style header row (blue background, white bold text, centered)
     headerRow.eachCell((cell) => {
         cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-        cell.fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: "0070C0" }
-        };
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "0070C0" } };
         cell.alignment = { horizontal: "center", vertical: "middle" };
         cell.border = {
             top: { style: "thin", color: { argb: "000000" } },
@@ -240,7 +196,6 @@ document.getElementById("exportBtn").addEventListener("click", async () => {
         };
     });
 
-    // ===== Data Rows =====
     table.querySelectorAll("tbody tr").forEach(tr => {
         if(tr.style.display !== "none"){
             const rowData = [];
@@ -253,7 +208,6 @@ document.getElementById("exportBtn").addEventListener("click", async () => {
         }
     });
 
-    // ===== Auto column width =====
     worksheet.columns.forEach(column => {
         let maxLength = 0;
         column.eachCell({ includeEmpty: true }, cell => {
@@ -263,7 +217,6 @@ document.getElementById("exportBtn").addEventListener("click", async () => {
         column.width = maxLength < 12 ? 12 : maxLength + 2;
     });
 
-    // ===== Export File =====
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: "application/octet-stream" });
     const link = document.createElement("a");

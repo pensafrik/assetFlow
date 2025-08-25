@@ -12,25 +12,21 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="page-header d-flex justify-content-between align-items-center mb-3">
-        <h2 class="h4">Sites Management</h2>
-        <div>
-            <a href="javascript:void(0)" id="exportBtn" class="btn btn-success me-2">
-    <i class="fas fa-file-excel me-1"></i> Export Excel
-</a>
-      <a href="{{ url_for('site_add') }}" class="btn btn-primary me-2">
-        <i class="fas fa-plus-circle me-1"></i> Ajouter
-      </a>
+    <div class="page-header d-flex justify-content-end align-items-center mb-3">
+        <a href="javascript:void(0)" id="exportBtn" class="btn btn-success me-2">
+            <i class="fas fa-file-excel me-1"></i> Exporter
+        </a>
+        <a href="{{ url_for('site_add') }}" class="btn btn-primary me-2">
+            <i class="fas fa-plus-circle me-1"></i> Ajouter
+        </a>
         <button id="bulkDeleteBtn" class="btn btn-danger" disabled>
-       <i class="fas fa-trash me-1"></i> Supprimer
-      </button>
-      
-    </div>
+            <i class="fas fa-trash me-1"></i> Supprimer
+        </button>
     </div>
 
     <div class="card">
         <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-building me-2"></i>Sites Directory</h5>
+            <h5 class="mb-0"><i class="fas fa-building me-2"></i>Liste des Sites</h5>
         </div>
         <div class="card-body p-0">
             <form id="sitesForm" method="POST" action="">
@@ -80,13 +76,12 @@
                                             data-pays="{{ site.pays }}"
                                             data-email="{{ site.email }}"
                                             data-telephone="{{ site.telephone }}"
-                                            title="View">
+                                            title="Voir">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                        <a href="{{ url_for('site_add', id=site.id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                        <a href="{{ url_for('site_add', id=site.id) }}" class="btn btn-sm btn-outline-primary" title="Modifier">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        
                                     </div>
                                 </td>
                             </tr>
@@ -94,8 +89,8 @@
                             <tr>
                                 <td colspan="10" class="text-center p-4">
                                     <i class="fas fa-building fa-2x text-muted"></i>
-                                    <h5 class="mt-2">No Sites Found</h5>
-                                    <p>Click "Add New Site" to create one</p>
+                                    <h5 class="mt-2">Aucun site trouvé</h5>
+                                    <p>Cliquez sur "Ajouter" pour créer un nouveau site</p>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -106,25 +101,26 @@
         </div>
     </div>
 </div>
+
 <div class="modal fade" id="viewSiteModal" tabindex="-1" aria-labelledby="viewSiteModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="viewSiteModalLabel">Site Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="viewSiteModalLabel">Détail</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
       </div>
       <div class="modal-body">
-        <p><strong>Nom:</strong> <span id="modalNom"></span></p>
-        <p><strong>Zone:</strong> <span id="modalZone"></span></p>
-        <p><strong>Type d'établissement:</strong> <span id="modalType"></span></p>
-        <p><strong>Activités:</strong> <span id="modalActivites"></span></p>
-        <p><strong>Ville:</strong> <span id="modalVille"></span></p>
-        <p><strong>Pays:</strong> <span id="modalPays"></span></p>
-        <p><strong>E-mail:</strong> <span id="modalEmail"></span></p>
-        <p><strong>Téléphone:</strong> <span id="modalTelephone"></span></p>
+        <p><strong>Nom :</strong> <span id="modalNom"></span></p>
+        <p><strong>Zone :</strong> <span id="modalZone"></span></p>
+        <p><strong>Type d'établissement :</strong> <span id="modalType"></span></p>
+        <p><strong>Activités :</strong> <span id="modalActivites"></span></p>
+        <p><strong>Ville :</strong> <span id="modalVille"></span></p>
+        <p><strong>Pays :</strong> <span id="modalPays"></span></p>
+        <p><strong>E-mail :</strong> <span id="modalEmail"></span></p>
+        <p><strong>Téléphone :</strong> <span id="modalTelephone"></span></p>
       </div>
       <div class="modal-footer">
-        <a id="editSiteBtn"  href="#" class="btn btn-primary">Modifier</a>
+        <a id="editSiteBtn" href="#" class="btn btn-primary">Modifier</a>
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
       </div>
     </div>
@@ -155,7 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
     rowCheckboxes.forEach(cb => cb.addEventListener("change", updateSelectAll));
 
     bulkDeleteBtn.addEventListener("click", () => {
-        if(confirm("Are you sure you want to delete selected sites?")) {
+        if(confirm("Êtes-vous sûr de vouloir supprimer les sites sélectionnés?")) {
             form.submit();
         }
     });
@@ -183,7 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
     rowCheckboxes.forEach(cb => cb.addEventListener("change", updateSelectAll));
 
     bulkDeleteBtn.addEventListener("click", () => {
-        if(confirm("Are you sure you want to delete selected sites?")) {
+        if(confirm("Êtes-vous sûr de vouloir supprimer les sites sélectionnés?")) {
             form.submit();
         }
     });

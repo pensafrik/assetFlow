@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}{{ 'Edit Locaux' if locaux else 'Add Locaux' }}{% endblock %}
+{% block title %}{{ 'Modifier l\'Emplacement' if locaux else 'Ajouter un Emplacement' }}{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <div class="card">
         <div class="card-header">
-            <h5 class="mb-0">{{ 'Edit Locaux' if locaux else 'Add New Locaux' }}</h5>
+            <h5 class="mb-0">{{ 'Modifier l\'Emplacement' if locaux else 'Ajouter un nouvel Emplacement' }}</h5>
         </div>
         <div class="card-body">
             <form method="POST" action="{{ url_for('locaux_add', id=locaux.id) if locaux else url_for('locaux_add') }}">
@@ -15,7 +15,7 @@
                     <div class="col-md-6">
                         <label class="form-label">Zone</label>
                         <select name="zone_id" class="form-select" required>
-                            <option value="">-- Select Zone --</option>
+                            <option value="">{{ 'Sélectionnez une zone' }}</option>
                             {% for z in zones %}
                                 <option value="{{ z.id }}" {% if locaux and locaux.zone_id == z.id %}selected{% endif %}>{{ z.nom }}</option>
                             {% endfor %}
@@ -24,7 +24,7 @@
                     <div class="col-md-6">
                         <label class="form-label">Site</label>
                         <select name="site_id" class="form-select" required>
-                            <option value="">-- Select Site --</option>
+                            <option value="">{{ 'Sélectionnez un site' }}</option>
                             {% for s in sites %}
                                 <option value="{{ s.id }}" {% if locaux and locaux.site_id == s.id %}selected{% endif %}>{{ s.nom }}</option>
                             {% endfor %}
@@ -35,26 +35,26 @@
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <label class="form-label">Bâtiment</label>
-                        <input type="text" name="batiment" class="form-control" value="{{ locaux.batiment if locaux else '' }}">
+                        <input type="text" name="batiment" class="form-control" placeholder="Entrez le bâtiment" value="{{ locaux.batiment if locaux else '' }}">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Etage</label>
-                        <input type="text" name="etage" class="form-control" value="{{ locaux.etage if locaux else '' }}">
+                        <label class="form-label">Étage</label>
+                        <input type="text" name="etage" class="form-control" placeholder="Entrez l'étage" value="{{ locaux.etage if locaux else '' }}">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Nom</label>
-                        <input type="text" name="nom" class="form-control" required value="{{ locaux.nom if locaux else '' }}">
+                        <input type="text" name="nom" class="form-control" placeholder="Entrez le nom de l'emplacement" required value="{{ locaux.nom if locaux else '' }}">
                     </div>
                 </div>
 
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <label class="form-label">Code</label>
-                        <input type="text" name="code" class="form-control" value="{{ locaux.code if locaux else '' }}">
+                        <input type="text" name="code" class="form-control" placeholder="Entrez le code" value="{{ locaux.code if locaux else '' }}">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Commentaires</label>
-                        <input type="text" name="commentaires" class="form-control" value="{{ locaux.commentaires if locaux else '' }}">
+                        <input type="text" name="commentaires" class="form-control" placeholder="Ajoutez un commentaire" value="{{ locaux.commentaires if locaux else '' }}">
                     </div>
                 </div>
 

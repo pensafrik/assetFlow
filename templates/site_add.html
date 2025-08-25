@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}{{ 'Edit Site' if site else 'Add Site' }}{% endblock %}
+{% block title %}{{ 'Modifier le Site' if site else 'Ajouter un Site' }}{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <div class="card">
         <div class="card-header">
-            <h5 class="mb-0">{{ 'Edit Site' if site else 'Add New Site' }}</h5>
+            <h5 class="mb-0">{{ 'Modifier le Site' if site else 'Ajouter un Nouveau Site' }}</h5>
         </div>
         <div class="card-body">
             <form method="POST" action="">
@@ -20,7 +20,7 @@
                     <div class="col-md-6">
                         <label class="form-label">Zone</label>
                         <select name="zone_id" class="form-select" required>
-                            <option value="">-- Select Zone --</option>
+                            <option value="">-- Sélectionner une zone --</option>
                             {% for zone in zones %}
                                 <option value="{{ zone.id }}" {% if site and site.zone_id == zone.id %}selected{% endif %}>{{ zone.nom }}</option>
                             {% endfor %}
